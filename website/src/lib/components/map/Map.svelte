@@ -5,6 +5,7 @@
     import { page } from '$app/state';
     import { map } from '$lib/components/map/map';
     import { PUBLIC_MAPTILER_KEY } from '$env/static/public';
+    import RefugePanel from '$lib/components/refuge/RefugePanel.svelte';
 
     let {
         maptilerKey = PUBLIC_MAPTILER_KEY,
@@ -71,6 +72,7 @@
             </Button>
         {/if}
     </div>
+    <RefugePanel />
 </div>
 
 <style lang="postcss">

@@ -414,6 +414,30 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
             },
         ],
     },
+    snowMask: {   // 👈 AJOUT ICI
+        version: 8,
+        sources: {
+            snowMask: {
+                type: "raster",
+                tiles: [
+                    "/snowtiles/{z}/{x}/{y}.png"
+                ],
+                tileSize: 256,
+                maxzoom: 14,
+                attribution: "Snow mask"
+            }
+        },
+        layers: [
+            {
+                id: "snowMask",
+                type: "raster",
+                source: "snowMask",
+                paint: {
+                    "raster-opacity": 0.85
+                }
+            }
+        ]
+    },
     mapterhornHillshade: {
         version: 8,
         sources: {
@@ -868,6 +892,7 @@ export const overlayTree: LayerTreeType = {
             cyclOSMlite: true,
             mapterhornHillshade: true,
             openRailwayMap: true,
+            snowMask: true
         },
         countries: {
             france: {
@@ -954,6 +979,7 @@ export const defaultOverlays: LayerTreeType = {
             cyclOSMlite: false,
             mapterhornHillshade: false,
             openRailwayMap: false,
+            snowMask: false,
         },
         countries: {
             france: {
@@ -1094,6 +1120,7 @@ export const defaultOverlayTree: LayerTreeType = {
             cyclOSMlite: false,
             mapterhornHillshade: false,
             openRailwayMap: false,
+            snowMask: true,
         },
         countries: {
             france: {

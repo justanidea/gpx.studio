@@ -1,13 +1,13 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { base } from '$app/paths';
-import { languages } from '$lib/languages';
-import { TrackPoint, Waypoint, type Coordinates, crossarcDistance, distance, GPXFile } from 'gpx';
-import maplibregl from 'maplibre-gl';
-import { pointToTile, pointToTileFraction } from '@mapbox/tilebelt';
-import type { GPXStatisticsTree } from '$lib/logic/statistics-tree';
-import { ListTrackSegmentItem } from '$lib/components/file-list/file-list';
 import { PUBLIC_MAPTILER_KEY } from '$env/static/public';
+import { ListTrackSegmentItem } from '$lib/components/file-list/file-list';
+import { languages } from '$lib/languages';
+import type { GPXStatisticsTree } from '$lib/logic/statistics-tree';
+import { pointToTile, pointToTileFraction } from '@mapbox/tilebelt';
+import { clsx, type ClassValue } from 'clsx';
+import { crossarcDistance, distance, GPXFile, TrackPoint, Waypoint, type Coordinates } from 'gpx';
+import maplibregl from 'maplibre-gl';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));

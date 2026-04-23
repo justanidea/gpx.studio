@@ -9,8 +9,12 @@ import {
 } from '$lib/assets/layers';
 import { getLayers } from '$lib/components/map/layer-control/utils';
 import { i18n } from '$lib/i18n.svelte';
-
-const { currentBasemap, currentOverlays, customLayers, opacities, terrainSource } = settings;
+import { selectedRefuge, refugeLoading } from '$lib/logic/refuge';
+import { fileStateCollection } from '$lib/logic/file-state';
+import { selection } from '$lib/logic/selection';
+import { loadFile } from '$lib/logic/file-actions';
+import { loadFiles } from '$lib/logic/file-actions';
+const { currentBasemap, fileOrder, currentOverlays, customLayers, opacities, terrainSource } = settings;
 
 const emptySource: maplibregl.GeoJSONSourceSpecification = {
     type: 'geojson',
@@ -41,28 +45,467 @@ export class StyleManager {
     private _map: Writable<maplibregl.Map | null>;
     private _maptilerKey: string;
     private _pastOverlays: Set<string> = new Set();
+        private _loadedIcons = new Set<string>();
+    private _loadingIcons = new Set<string>();
+    private _basemapLabelLayerIds: string[] = [];
+private _labelsHidden = false;
+    private _protectedLayers = new Set([
+    'refuges-poi'
+]);
+constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
+    this._map = map;
+    this._maptilerKey = maptilerKey;
 
-    constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
-        this._map = map;
-        this._maptilerKey = maptilerKey;
-        this._map.subscribe((map_) => {
-            if (map_) {
-                this.updateBasemap();
-                map_.on('style.load', () => this.updateOverlays());
-                map_.on('pitch', () => this.updateTerrain());
+    // --- MAP INIT SUB ---
+    this._map.subscribe((map_) => {
+        if (!map_) return;
+
+        this.updateBasemap();
+
+            map_.on('style.load', async () => {
+
+        this.addRefugesLayer(map_);
+
+        this.updateOverlays();
+        this.updateTerrain();
+
+        await this.updateRefuges(map_);
+
+
+        // IMPORTANT: garantir source + layer existants
+         this.addTracesLayer(map_);
+
+    const res = await fetch('/api/traces');
+    const traces = await res.json();
+
+    const geojson = {
+        type: 'FeatureCollection',
+        features: traces.map((t: any) => ({
+            type: 'Feature',
+            properties: {
+                name: t.name
+            },
+            geometry: {
+                type: 'LineString',
+                coordinates: t.coordinates
             }
+        }))
+    };
+
+    const source = map_.getSource('traces') as maplibregl.GeoJSONSource;
+    source.setData(geojson);
+
+
+        // await fetch(`/refuges?bbox=${map_.getBounds().toArray().flat().join(',')}`);
+// const res = await fetch('/api/traces');
+//     const traces = await res.json();
+
+//     const files: GPXFile[] = [];
+//     console.log(traces)
+//     for (const t of traces) {
+//         const file = await loadGPXFromString(t.gpx, t.file);
+//         if (file) files.push(file);
+//     }
+
+//     const ids: string[] = [];
+
+//     files.forEach((file, index) => {
+//         const id = `gpx-${index}-embed`;
+//         file._data.id = id;
+//         ids.push(id);
+//     });
+
+//     fileStateCollection.setEmbeddedFiles(files);
+//     fileOrder.set(ids) ;
+//     selection.selectAll();
+
+});
+
+        map_.on('click', 'refuges-poi', async (e) => {
+            const feature = e.features?.[0];
+            if (!feature) return;
+            await this.handleRefugeClick(feature);
         });
-        currentBasemap.subscribe(() => this.updateBasemap());
-        currentOverlays.subscribe(() => this.updateOverlays());
-        opacities.subscribe(() => this.updateOverlays());
-        terrainSource.subscribe(() => this.updateTerrain());
-        customLayers.subscribe(() => this.updateBasemap());
-    }
+
+        map_.on('pitch', () => this.updateTerrain());
+
+        map_.on('moveend', () => {
+            this.updateRefuges(map_);
+        });
+    });
+
+    // --- GLOBAL STORE REACTIONS ---
+    currentBasemap.subscribe(() => this.updateBasemap());
+
+    customLayers.subscribe(() => this.updateBasemap());
+
+    opacities.subscribe(() => this.updateOverlays());
+
+    terrainSource.subscribe(() => this.updateTerrain());
+
+    // IMPORTANT: overlays central reaction (snowMask incluse)
+    currentOverlays.subscribe((value) => {
+        const map_ = get(this._map);
+        if (!map_) return;
+
+        const layers = getLayers(value ?? {});
+
+        this.updateOverlays();
+
+        if (layers.snowMask) {
+            this.hideBasemapLabels(map_);
+        } else {
+            this.restoreBasemapLabels(map_);
+        }
+    });
+}
+
 
     updateBasemap() {
         const map_ = get(this._map);
         if (!map_) return;
         this.buildStyle().then((style) => map_.setStyle(style));
+    }
+
+    private addTracesLayer(map_: maplibregl.Map) {
+    if (map_.getSource('traces')) return;
+
+    // SOURCE
+    map_.addSource('traces', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
+    });
+
+    // POSITION : au-dessus des overlays mais sous les labels si besoin
+    const beforeId =
+        map_.getLayer('overlays-end')
+            ? 'overlays-end'
+            : undefined;
+
+    // LAYER
+    map_.addLayer(
+        {
+            id: 'traces-line',
+            type: 'line',
+            source: 'traces',
+            minzoom: 8,
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
+            paint: {
+                'line-color': '#3b82f6',
+                'line-width': 2,
+                'line-opacity': 0.75
+            }
+        },
+        beforeId
+    );
+
+    // UX : curseur pointer
+    map_.on('mouseenter', 'traces-line', () => {
+        map_.getCanvas().style.cursor = 'pointer';
+    });
+
+    map_.on('mouseleave', 'traces-line', () => {
+        map_.getCanvas().style.cursor = '';
+    });
+
+    map_.on('click', 'traces-line', async (e) => {
+    const feature = e.features?.[0];
+    if (!feature) return;
+
+    const name = feature.properties?.name;
+    if (!name) return;
+
+    await this.openTraceInEditor(name);
+});
+}
+
+
+async openTraceInEditor(name: string) {
+    const res = await fetch(`/api/traces/${name}`);
+    const trace = await res.json();
+
+    if (!trace.gpx) return;
+
+    const data = new TextEncoder().encode(trace.gpx);
+
+    const file = new File([data], trace.file ?? `${name}.gpx`, {
+        type: 'application/gpx+xml'
+    });
+
+    // 🔥 PIPELINE OFFICIEL
+    await loadFiles([file]);
+
+    // 👉 optionnel mais recommandé
+    selection.selectAll();
+}
+
+    private async loadGPXFromString(gpxText: string, filename: string) {
+        const data = new TextEncoder().encode(gpxText);
+
+        const file = new File([data], filename, {
+            type: 'application/gpx+xml'
+        });
+
+        return loadFile(file);
+    }
+
+    private cacheBasemapLabels(map_: maplibregl.Map) {
+        if (this._basemapLabelLayerIds.length) return;
+
+        const layers = map_.getStyle().layers;
+        if (!layers) return;
+
+        this._basemapLabelLayerIds = layers
+            .filter(l =>
+                l.type === 'symbol' &&
+                (l.layout?.['text-field'] || l.layout?.['icon-image']) &&
+                !this._protectedLayers.has(l.id)   // 👈 IMPORTANT
+            )
+            .map(l => l.id);
+    }
+    private hideBasemapLabels(map_: maplibregl.Map) {
+        if (this._labelsHidden) return;
+
+        this.cacheBasemapLabels(map_);
+
+        for (const id of this._basemapLabelLayerIds) {
+            if (map_.getLayer(id)) {
+                map_.setLayoutProperty(id, 'visibility', 'none');
+            }
+        }
+
+        this._labelsHidden = true;
+    }
+
+    private restoreBasemapLabels(map_: maplibregl.Map) {
+        if (!this._labelsHidden) return;
+
+        this.cacheBasemapLabels(map_);
+
+        for (const id of this._basemapLabelLayerIds) {
+            if (map_.getLayer(id)) {
+                map_.setLayoutProperty(id, 'visibility', 'visible');
+            }
+        }
+
+        this._labelsHidden = false;
+    }
+
+    private async handleRefugeClick(feature: maplibregl.MapGeoJSONFeature) {
+        const props = feature.properties;
+
+        const type = typeof props?.type === 'string'
+            ? JSON.parse(props.type)
+            : props?.type;
+
+        const coord = typeof props?.coord === 'string'
+            ? JSON.parse(props.coord)
+            : props?.coord;
+
+        const places = typeof props?.places === 'string'
+            ? JSON.parse(props.places)
+            : props?.places;
+
+        const data = {
+            name: props?.nom,
+            type: type?.valeur,
+            icon: type?.icone,
+            altitude: coord?.alt,
+            places: places?.valeur,
+            placesLabel: places?.nom,
+            link: props?.lien
+        };
+
+        console.log("Refuge clicked:", data);
+
+        selectedRefuge.set(data);
+        refugeLoading.set(true);
+        const details = await this.fetchPoiDetails(data.link);
+        console.log("DETAILS; ", details)
+        selectedRefuge.set({
+            ...data,
+            details
+        });
+        refugeLoading.set(false);
+    }
+
+    
+
+    async preloadIcons(map_: maplibregl.Map, features: any[]) {
+        const icons = new Set(
+            features.map(f => f.properties?.icon).filter(Boolean)
+        );
+
+        for (const icon of icons) {
+            if (this._loadedIcons.has(icon)) continue;
+            if (this._loadingIcons.has(icon)) continue;
+
+            this._loadingIcons.add(icon);
+
+            try {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.src = `/icon/${icon}`;
+
+                await new Promise<void>((resolve, reject) => {
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 32;
+                        canvas.height = 32;
+
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return reject();
+
+                        ctx.drawImage(img, 0, 0, 32, 32);
+
+                        const imageData = ctx.getImageData(0, 0, 32, 32);
+
+                        if (!map_.hasImage(icon)) {
+                            map_.addImage(icon, imageData, { pixelRatio: 1 });
+                        }
+
+                        this._loadedIcons.add(icon);
+                        resolve();
+                    };
+
+                    img.onerror = reject;
+                });
+            } catch (e) {
+                console.warn("icon preload failed:", icon);
+            } finally {
+                this._loadingIcons.delete(icon);
+            }
+        }
+    }
+
+async fetchPoiDetails(link: string) {
+    const res = await fetch(`/refuges/details?url=${encodeURIComponent(link)}`);
+    const data = await res.json();
+
+    return {
+        sections: data.sections ?? [],
+        contact: data.contact ?? null,
+        photos: data.photos ?? []
+    };
+}
+
+    async addRefugeIcons(map_: maplibregl.Map, features: any[]) {
+        const icons = new Set(
+            features.map(f => f.properties?.type?.icone).filter(Boolean)
+        );
+
+        for (const icon of icons) {
+            if (map_.hasImage(icon)) continue;
+
+            const url = `/icon/${icon}`; // ou /icones/${icon}
+
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = url;
+
+            await new Promise((resolve, reject) => {
+                img.onload = () => {
+                    const size = 32;
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return reject();
+
+                    ctx.drawImage(img, 0, 0, size, size);
+
+                    const imageData = ctx.getImageData(0, 0, size, size);
+
+                    map_.addImage(icon, imageData as any, {
+                        pixelRatio: 1
+                    });
+
+                    resolve(null);
+                };
+
+                img.onerror = reject;
+            });
+        }
+    }   
+
+    private async updateRefuges(map_: maplibregl.Map) {
+        const bbox = map_.getBounds().toArray().flat().join(',');
+
+        const res = await fetch(`/refuges?bbox=${bbox}`);
+        const geojson = await res.json();
+
+        const geojsonFixed = {
+            ...geojson,
+            features: geojson.features.map((f: any) => ({
+                ...f,
+                properties: {
+                    ...f.properties,
+                    icon: f.properties.type?.icone
+                }
+            }))
+        };
+
+        const source = map_.getSource('refuges') as maplibregl.GeoJSONSource;
+        if (!source) return;
+
+        // 🔴 IMPORTANT: preload AVANT setData
+        await this.preloadIcons(map_, geojsonFixed.features);
+
+        // ✅ ensuite seulement
+        source.setData(geojsonFixed);
+    }
+
+    private addRefugesLayer(map_: maplibregl.Map) {
+        if (map_.getSource('refuges')) return;
+
+        map_.addSource('refuges', {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: []
+            }
+        });
+        const beforeId = undefined;
+
+if (map_.getLayer('overlays-end')) {
+    map_.moveLayer('refuges-poi', undefined); // force top
+}
+
+
+        map_.addLayer(
+            {
+                id: 'refuges-poi',
+                type: 'symbol',
+                source: 'refuges',
+                minzoom: 10,
+                 layout: {
+      'icon-image': ['get', 'icon'],
+      'icon-size': 0.8,
+      'text-field': ['get', 'nom'],
+      'text-size': 12,
+      'text-anchor': 'top',
+      'text-offset': [0, 1.2],
+      'icon-allow-overlap': true,
+      'text-allow-overlap': false
+    },
+
+    paint: {
+      'text-color': '#ffffff',
+      'text-halo-color': '#000000',
+      'text-halo-width': 1.5,
+      'text-halo-blur': 0.5
+    }
+            },
+            beforeId
+        );
     }
 
     async buildStyle(): Promise<maplibregl.StyleSpecification> {

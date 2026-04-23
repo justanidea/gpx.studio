@@ -45,6 +45,16 @@ export function getFileIds(n: number) {
     return ids;
 }
 
+export async function loadGPXFromString(gpxText: string, filename: string) {
+    const data = new TextEncoder().encode(gpxText);
+
+    const file = new File([data], filename, {
+        type: 'application/gpx+xml'
+    });
+
+    return loadFile(file);
+}
+
 export function newGPXFile() {
     const newFileName = i18n._('menu.new_file');
 
