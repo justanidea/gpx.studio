@@ -28,7 +28,7 @@
         "undo": "Poništi",
         "redo": "Vrati poništeno",
         "delete": "Obriši",
-        "delete_all": "Delete all",
+        "delete_all": "Izbriši sve",
         "select_all": "Izaberi sve",
         "view": "Pogledaj",
         "elevation_profile": "Visinski profil",
@@ -36,7 +36,7 @@
         "switch_basemap": "Vrati prethodnu osnovnu mapu",
         "toggle_overlays": "Sakrij/Prikaži preklapanja",
         "toggle_3d": "Sakrij/Prikaži 3D",
-        "fullscreen": "Full screen",
+        "fullscreen": "Ceo ekran",
         "settings": "Podešavanja",
         "distance_units": "Jedinica razdaljine",
         "metric": "Metričke",
@@ -64,7 +64,7 @@
         "ctrl": "Ctrl",
         "click": "Klik",
         "drag": "Prevucite",
-        "right_click_drag": "Right-click drag",
+        "right_click_drag": "Prevlačenje desnim klikom",
         "metadata": {
             "button": "Informacije...",
             "name": "Naziv",
@@ -82,7 +82,7 @@
         "center": "Centar",
         "open_in": "Otvorite u",
         "copy_coordinates": "Kopiraj koordinate",
-        "edit_osm": "Edit in OpenStreetMap"
+        "edit_osm": "Uredi u OpenStreetMap-u"
     },
     "toolbar": {
         "routing": {
@@ -192,8 +192,8 @@
                 "from": "Početna tačka je predaleko od najbližeg puta",
                 "via": "Putna tačka je predaleko od najbližeg puta",
                 "to": "Krajnja tačka je predaleko od najbližeg puta",
-                "distance": "The end point is too far from the start point",
-                "connection": "No connection found between the points",
+                "distance": "Krajnja tačka je predaleko od najbližeg puta",
+                "connection": "Nije pronađena veza između tačaka",
                 "timeout": "Računanje rute je trajalo predugo, pokušajte da dodate putne tačke bliže jednu drugoj"
             }
         },
@@ -235,7 +235,7 @@
         },
         "elevation": {
             "button": "Zatražite podatke o nadmorskoj visini",
-            "help": "Requesting elevation data will erase the existing elevation data, if any, and replace it with data from MapTiler.",
+            "help": "Zahtevanje podataka o nadmorskoj visini će obrisati postojeće podatke o nadmorskoj visini, ako ih ima, i zameniti ih podacima iz MapTiler-a.",
             "help_no_selection": "Izaberite stavku datoteke da biste zatražili podatke o nadmorskoj visini."
         },
         "waypoint": {
@@ -277,7 +277,7 @@
             "new": "Novi prilagođeni sloj",
             "edit": "Uredite prilagođeni sloj",
             "urls": "URL(s)",
-            "url_placeholder": "WMTS, WMS or MapLibre style JSON",
+            "url_placeholder": "JSON u stilu WMTS, WMS ili MapLibre",
             "max_zoom": "Maksimalno uvećanje",
             "layer_type": "Tip sloja",
             "basemap": "Osnovna mapa",
@@ -286,7 +286,7 @@
             "update": "Ažurirajte sloj"
         },
         "opacity": "Providnost preklapanja",
-        "terrain": "Terrain source",
+        "terrain": "Izvor terena",
         "label": {
             "basemaps": "Osnovne mape",
             "overlays": "Preklapanja",
@@ -333,7 +333,7 @@
             "usgs": "USGS",
             "bikerouterGravel": "bikerouter.de Gravel",
             "cyclOSMlite": "CyclOSM Lite",
-            "mapterhornHillshade": "Mapterhorn Hillshade",
+            "mapterhornHillshade": "Mapterhorn Hilshejd",
             "openRailwayMap": "OpenRailwayMap",
             "swisstopoSlope": "swisstopo Slope",
             "swisstopoHiking": "swisstopo Hiking",
@@ -363,7 +363,7 @@
             "water": "Voda",
             "shower": "Tuš",
             "shelter": "Sklonište",
-            "cemetery": "Cemetery",
+            "cemetery": "Groblje",
             "motorized": "Automobili i motocikli",
             "fuel-station": "Benzinska stanica",
             "parking": "Parking",
@@ -495,7 +495,7 @@
         "email": "E-mail adresa",
         "contribute": "Doprinesi",
         "supported_by": "Podržan od strane",
-        "features": "Features",
+        "features": "Karakteristike",
         "route_planning": "Planiranje rute",
         "route_planning_description": "Intuitivan interfejs za kreiranje itinerera prilagođenih svakom sportu, na osnovu OpenStreetMap podataka.",
         "file_processing": "Napredno procesiranje datoteke",
@@ -504,15 +504,15 @@
         "maps_description": "Velika kolekcija osnovnih mapa, slojeva i tačaka interesovanja koje će vam pomoći da napravite sledeću avanturu na otvorenom ili da vizuelizujete svoje najnovije dostignuće.",
         "data_visualization": "Vizualizacija podataka",
         "data_visualization_description": "Interaktivni profil nadmorske visine sa detaljnom statistikom za analizu zabeleženih aktivnosti i budućih ciljeva.",
-        "philosophy": "Philosophy",
-        "foss": "Free, ad-free and open source",
-        "foss_description": "The website is free to use, without ads, and the source code is publicly available on GitHub.",
-        "privacy": "Privacy-friendly",
-        "privacy_description": "Your GPX files never leave your browser. No tracking, no data collection.",
-        "community": "Made possible by the community",
-        "community_description": "gpx.studio has an amazing community that has covered its costs through donations for years, while shaping the project through feature suggestions, bug reports, and translations into many languages.",
-        "support_button": "Support gpx.studio on Open Collective",
-        "translate_button": "Help translate the website on Crowdin"
+        "philosophy": "Filozofija",
+        "foss": "Besplatno, bez oglasa i otvorenog koda",
+        "foss_description": "Veb lokacija je besplatna za korišćenje, bez reklama, a izvorni kod je javno dostupan na GitHabu.",
+        "privacy": "Zaštita privatnosti",
+        "privacy_description": "Vaše GPX datoteke nikada ne napuštaju vaš pregledač. Nema praćenja, nema prikupljanja podataka.",
+        "community": "Omogućeno zahvaljujući zajednici",
+        "community_description": "gpx.studio ima neverovatnu zajednicu koja godinama pokriva svoje troškove donacijama, dok istovremeno oblikuje projekat kroz predloge funkcija, izveštaje o greškama i prevode na mnoge jezike.",
+        "support_button": "Podržite gpx.studio na Open Collective-u",
+        "translate_button": "Pomozite u prevodu veb stranice na Crowdin-u"
     },
     "docs": {
         "translate": "Poboljšajte prevod na Crowdin-u",
@@ -537,7 +537,7 @@
     },
     "embedding": {
         "title": "Napravi svoju mapu",
-        "maptiler_key": "MapTiler key (optional, only required for MapTiler maps)",
+        "maptiler_key": "Ključ MapTiler-a (opciono, potreban samo za MapTiler mape)",
         "file_urls": "URL-ovi datoteka (razdvojeni zarezima)",
         "drive_ids": "Id datoteke sa Google diska (razdvojeni zarezima)",
         "basemap": "Osnovna mapa",
