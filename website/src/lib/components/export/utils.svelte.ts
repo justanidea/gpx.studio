@@ -64,3 +64,38 @@ async function exportFilesAsZip(fileIds: string[], exclude: string[]) {
         FileSaver.saveAs(blob, 'gpx-files.zip');
     }
 }
+
+async function saveFiles(fileIds: string[], exclude: string[]) {
+    const filesPayload = [];
+
+    for (const fileId of fileIds) {
+        const file = fileStateCollection.getFile(fileId);
+        if (!file) continue;
+
+        filesPayload.push({
+            name: file.metadata.name || "trace",
+            gpx: buildGPX(file, exclude)
+        });
+    }
+
+    await fetch('/api/save-trace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: filesPayload })
+    });
+}
+
+export async function saveSelectedFiles(exclude: string[]) {
+    const fileIds: string[] = [];
+
+    selection.applyToOrderedSelectedItemsFromFile((fileId) => {
+        fileIds.push(fileId);
+    });
+
+    await saveFiles(fileIds, exclude);
+}
+
+export async function saveAllFiles(exclude: string[]) {
+    const fileIds = get(settings.fileOrder);
+    await saveFiles(fileIds, exclude);
+}

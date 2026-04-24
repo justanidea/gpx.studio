@@ -45,13 +45,22 @@ export class StyleManager {
     private _map: Writable<maplibregl.Map | null>;
     private _maptilerKey: string;
     private _pastOverlays: Set<string> = new Set();
-        private _loadedIcons = new Set<string>();
+    private _loadedIcons = new Set<string>();
     private _loadingIcons = new Set<string>();
     private _basemapLabelLayerIds: string[] = [];
-private _labelsHidden = false;
+    private _labelsHidden = false;
+    private _summitsLoading = false;
+    private _summitsPending = false;
+    private _isStartup = true;
     private _protectedLayers = new Set([
-    'refuges-poi'
-]);
+        'refuges-poi'
+    ]);
+    private _loadedBBox: {
+        west:number;
+        south:number;
+        east:number;
+        north:number;
+    } | null = null;
 constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
     this._map = map;
     this._maptilerKey = maptilerKey;
@@ -62,10 +71,11 @@ constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
 
         this.updateBasemap();
 
-            map_.on('style.load', async () => {
-
-        this.addRefugesLayer(map_);
-
+        map_.on('style.load', async () => {
+        this.cacheBasemapLabels(map_);
+        // this.addRefugesLayer(map_);
+        // this.addSummitsLayer(map_);
+        
         this.updateOverlays();
         this.updateTerrain();
 
@@ -73,52 +83,36 @@ constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
 
 
         // IMPORTANT: garantir source + layer existants
-         this.addTracesLayer(map_);
+        this.addTracesLayer(map_);
 
-    const res = await fetch('/api/traces');
-    const traces = await res.json();
+        const res = await fetch('/api/traces');
+        const traces = await res.json();
 
-    const geojson = {
-        type: 'FeatureCollection',
-        features: traces.map((t: any) => ({
-            type: 'Feature',
-            properties: {
-                name: t.name
-            },
-            geometry: {
-                type: 'LineString',
-                coordinates: t.coordinates
-            }
-        }))
-    };
+        const geojson = {
+            type: 'FeatureCollection',
+            features: traces.map((t: any) => ({
+                type: 'Feature',
+                properties: {
+                    name: t.name
+                },
+                geometry: {
+                    type: 'LineString',
+                    coordinates: t.coordinates
+                }
+            }))
+        };
 
-    const source = map_.getSource('traces') as maplibregl.GeoJSONSource;
-    source.setData(geojson);
-
-
-        // await fetch(`/refuges?bbox=${map_.getBounds().toArray().flat().join(',')}`);
-// const res = await fetch('/api/traces');
-//     const traces = await res.json();
-
-//     const files: GPXFile[] = [];
-//     console.log(traces)
-//     for (const t of traces) {
-//         const file = await loadGPXFromString(t.gpx, t.file);
-//         if (file) files.push(file);
-//     }
-
-//     const ids: string[] = [];
-
-//     files.forEach((file, index) => {
-//         const id = `gpx-${index}-embed`;
-//         file._data.id = id;
-//         ids.push(id);
-//     });
-
-//     fileStateCollection.setEmbeddedFiles(files);
-//     fileOrder.set(ids) ;
-//     selection.selectAll();
-
+        const source = map_.getSource('traces') as maplibregl.GeoJSONSource;
+        source.setData(geojson);
+        map_.moveLayer('snowMask', 'summits');
+        map_.moveLayer('snowMask', 'refuges-poi');
+});
+        map_.on('idle', () => {
+    if (this._isStartup){
+        this.hideBasemapLabels(map_);
+        this._isStartup = false;
+    }
+    
 });
 
         map_.on('click', 'refuges-poi', async (e) => {
@@ -129,8 +123,9 @@ constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
 
         map_.on('pitch', () => this.updateTerrain());
 
-        map_.on('moveend', () => {
+        map_.on('moveend', async() => {
             this.updateRefuges(map_);
+            this.updateSummits(map_);
         });
     });
 
@@ -151,12 +146,18 @@ constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
         const layers = getLayers(value ?? {});
 
         this.updateOverlays();
-
-        if (layers.snowMask) {
-            this.hideBasemapLabels(map_);
-        } else {
+        if (layers.labels) {
             this.restoreBasemapLabels(map_);
+        } else {
+            this.hideBasemapLabels(map_);
         }
+        // if (layers.snowMask) {
+        //     this.hideBasemapLabels(map_);
+        // } else {
+        //     if (layers.labels) {
+        //         this.restoreBasemapLabels(map_);
+        //     }
+        // }
     });
 }
 
@@ -223,8 +224,40 @@ constructor(map: Writable<maplibregl.Map | null>, maptilerKey: string) {
 
     await this.openTraceInEditor(name);
 });
+
+    
 }
 
+private expandedBounds(map_: maplibregl.Map){
+
+    const b = map_.getBounds();
+    const west  = b.getWest();
+    const east  = b.getEast();
+    const south = b.getSouth();
+    const north = b.getNorth();
+
+    const dx = (east-west)*0.30;
+    const dy = (north-south)*0.30;
+
+    return {
+        west: west-dx,
+        south: south-dy,
+        east: east+dx,
+        north: north+dy
+    };
+}
+
+private viewportInsideLoadedBuffer(map_: maplibregl.Map){
+    if(!this._loadedBBox) return false;
+
+    const b = map_.getBounds();
+    return (
+      b.getWest()  >= this._loadedBBox.west &&
+      b.getEast()  <= this._loadedBBox.east &&
+      b.getSouth() >= this._loadedBBox.south &&
+      b.getNorth() <= this._loadedBBox.north
+    );
+}
 
 async openTraceInEditor(name: string) {
     const res = await fetch(`/api/traces/${name}`);
@@ -261,17 +294,19 @@ async openTraceInEditor(name: string) {
         const layers = map_.getStyle().layers;
         if (!layers) return;
 
-        this._basemapLabelLayerIds = layers
-            .filter(l =>
-                l.type === 'symbol' &&
-                (l.layout?.['text-field'] || l.layout?.['icon-image']) &&
-                !this._protectedLayers.has(l.id)   // 👈 IMPORTANT
-            )
-            .map(l => l.id);
+       this._basemapLabelLayerIds = layers
+    .filter(l =>
+        l.type === 'symbol' &&
+        (l.layout?.['text-field'] || l.layout?.['icon-image']) &&
+        !this._protectedLayers.has(l.id) &&
+        l.id !== 'summits-poi' &&
+        l.id !== 'refuges-poi'
+    )
+    .map(l => l.id);
     }
     private hideBasemapLabels(map_: maplibregl.Map) {
         if (this._labelsHidden) return;
-
+        console.log("hiding among:", this._basemapLabelLayerIds)
         this.cacheBasemapLabels(map_);
 
         for (const id of this._basemapLabelLayerIds) {
@@ -438,7 +473,6 @@ async fetchPoiDetails(link: string) {
 
     private async updateRefuges(map_: maplibregl.Map) {
         const bbox = map_.getBounds().toArray().flat().join(',');
-
         const res = await fetch(`/refuges?bbox=${bbox}`);
         const geojson = await res.json();
 
@@ -463,6 +497,50 @@ async fetchPoiDetails(link: string) {
         source.setData(geojsonFixed);
     }
 
+    private async updateSummits(map_: maplibregl.Map) {
+
+    // si déjà en cours → on met en attente
+    if (this._summitsLoading) {
+        this._summitsPending = true;
+        return;
+    }
+
+    if (map_.getZoom() < 10) return;
+
+    if (this.viewportInsideLoadedBuffer(map_)) {
+        return;
+    }
+
+    this._summitsLoading = true;
+
+    try {
+
+        const b = this.expandedBounds(map_);
+        const bbox = `${b.west},${b.south},${b.east},${b.north}`;
+
+        const res = await fetch(`/api/summits?bbox=${bbox}`);
+        const geojson = await res.json();
+
+        const source =
+            map_.getSource('summits') as maplibregl.GeoJSONSource;
+
+        if (source) {
+            source.setData(geojson);
+        }
+
+        this._loadedBBox = b;
+
+    } finally {
+        this._summitsLoading = false;
+    }
+
+    // 🔥 si un move est arrivé pendant le fetch → on relance UNE fois
+    if (this._summitsPending) {
+        this._summitsPending = false;
+        this.updateSummits(map_);
+    }
+}
+
     private addRefugesLayer(map_: maplibregl.Map) {
         if (map_.getSource('refuges')) return;
 
@@ -485,6 +563,50 @@ if (map_.getLayer('overlays-end')) {
                 id: 'refuges-poi',
                 type: 'symbol',
                 source: 'refuges',
+                minzoom: 12,
+                 layout: {
+      'icon-image': ['get', 'icon'],
+      'icon-size': 0.8,
+      'text-field': ['get', 'nom'],
+      'text-size': 12,
+      'text-anchor': 'top',
+      'text-offset': [0, 1.2],
+      'icon-allow-overlap': true,
+      'text-allow-overlap': false
+    },
+
+    paint: {
+      'text-color': '#ffffff',
+      'text-halo-color': '#000000',
+      'text-halo-width': 1.5,
+      'text-halo-blur': 0.5
+    }
+            },
+            beforeId
+        );
+    }
+    private addSummitsLayer(map_: maplibregl.Map) {
+        if (map_.getSource('summits')) return;
+
+        map_.addSource('summits', {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: []
+            }
+        });
+        const beforeId = undefined;
+
+if (map_.getLayer('overlays-end')) {
+    map_.moveLayer('summits-poi', undefined); // force top
+}
+
+
+        map_.addLayer(
+            {
+                id: 'summits-poi',
+                type: 'symbol',
+                source: 'summits',
                 minzoom: 10,
                  layout: {
       'icon-image': ['get', 'icon'],
@@ -507,7 +629,6 @@ if (map_.getLayer('overlays-end')) {
             beforeId
         );
     }
-
     async buildStyle(): Promise<maplibregl.StyleSpecification> {
         const custom = get(customLayers);
 

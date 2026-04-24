@@ -438,6 +438,88 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
             }
         ]
     },
+    summits: {
+        version: 8,
+        sources: {
+            summits: {
+                type: "geojson",
+                data: {
+                    type: "FeatureCollection",
+                    features: []
+                }
+            }
+        },
+        layers: [
+            {
+                id: "summits-poi",
+                type: "symbol",
+                source: "summits",
+                minzoom: 8,
+                layout: {
+                    "text-field": ["get", "nom"],
+                    "text-size": 12,
+                    "text-offset": [0, 1.2],
+                    "text-anchor": "top"
+                },
+                paint: {
+                    "text-color": "#a4ffb7",
+                    "text-halo-color": "#000000",
+                    "text-halo-width": 1.5,
+                    "text-halo-blur": 0.5
+                }
+            }
+        ]
+    },
+    labels: {
+        version: 8,
+        sources: {
+            summits: {
+                type: "geojson",
+                data: {
+                    type: "FeatureCollection",
+                    features: []
+                }
+            }
+        },
+        layers: [
+        ]
+    },
+    refuges: {
+        version: 8,
+        sources: {
+            refuges: {
+                type: "geojson",
+                data: {
+                    type: "FeatureCollection",
+                    features: []
+                }
+            }
+        },
+        layers: [
+            {
+                id: 'refuges-poi',
+                type: 'symbol',
+                source: 'refuges',
+                minzoom: 12,
+                layout: {
+                    'icon-image': ['get', 'icon'],
+                    'icon-size': 0.8,
+                    'text-field': ['get', 'nom'],
+                    'text-size': 12,
+                    'text-anchor': 'top',
+                    'text-offset': [0, 1.2],
+                    'icon-allow-overlap': true,
+                    'text-allow-overlap': false
+                },
+                paint: {
+                    'text-color': '#ffffff',
+                    'text-halo-color': '#000000',
+                    'text-halo-width': 1.5,
+                    'text-halo-blur': 0.5
+                }
+            }
+        ]
+    },
     mapterhornHillshade: {
         version: 8,
         sources: {
@@ -892,7 +974,10 @@ export const overlayTree: LayerTreeType = {
             cyclOSMlite: true,
             mapterhornHillshade: true,
             openRailwayMap: true,
-            snowMask: true
+            snowMask: true,
+            labels: true,
+            summits: true,
+            refuges: true,
         },
         countries: {
             france: {
@@ -980,6 +1065,9 @@ export const defaultOverlays: LayerTreeType = {
             mapterhornHillshade: false,
             openRailwayMap: false,
             snowMask: false,
+            labels: true,
+            summits: false,
+            refuges: false,
         },
         countries: {
             france: {
@@ -1121,6 +1209,9 @@ export const defaultOverlayTree: LayerTreeType = {
             mapterhornHillshade: false,
             openRailwayMap: false,
             snowMask: true,
+            labels: true,
+            summits: true,
+            refuges: true,
         },
         countries: {
             france: {

@@ -9,6 +9,8 @@
         exportSelectedFiles,
         ExportState,
         exportState,
+        saveAllFiles,
+        saveSelectedFiles,
     } from '$lib/components/export/utils.svelte';
     import { currentTool } from '$lib/components/toolbar/tools';
     import {
@@ -102,8 +104,15 @@
             <div class="w-full flex flex-row flex-wrap gap-2">
                 <Button
                     class="bg-support grow"
-                    href="https://opencollective.com/gpxstudio"
-                    target="_blank"
+                    onclick={async () => {
+    if (exportState.current === ExportState.SELECTION) {
+        await saveSelectedFiles(exclude);
+    } else if (exportState.current === ExportState.ALL) {
+        await saveAllFiles(exclude);
+    }
+
+    alert("Traces sauvegardées côté serveur");
+}}
                 >
                     {i18n._('menu.support_button')}
                     <span>🙏</span>
@@ -197,3 +206,4 @@
         </Dialog.Content>
     </Dialog.Portal>
 </Dialog.Root>
+

@@ -51,7 +51,8 @@ export class MapLibreGLMap {
                 sources: {},
                 layers: [],
             },
-            zoom: 0,
+            center: [6.1, 46.2], // 👈 Europe (exemple Alpes)
+            zoom: 10,
             hash: hash,
             boxZoom: false,
             maxPitch: 90,
