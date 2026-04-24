@@ -10,63 +10,63 @@ title: Kontrole mape
 
 # { title }
 
-The map controls are located on the right side of the interface.
+Kontrole mape se nalaze na desnoj strani interfejsa.
 Ove kontrole vam omogućavaju da se krećete po mapi, uvećavate i umanjujete i prelazite između različitih stilova mape.
 
-### <Diff size="16" class="inline-block" style="margin-bottom: 2px" /> Map navigation
+### <Diff size="16" class="inline-block" style="margin-bottom: 2px" /> Navigacija mape
 
-The controls at the top allow you to zoom in <Plus size="16" class="inline-block" style="margin-bottom: 2px" /> and out <Minus size="16" class="inline-block" style="margin-bottom: 2px" />, and to change the orientation and tilt of the map <Compass size="16" class="inline-block" style="margin-bottom: 2px" />.
-
-<DocsNote>
-
-To control the orientation and tilt of the map, you can also drag the map while holding <kbd>Ctrl</kbd>.
-
-</DocsNote>
-
-### <Search size="16" class="inline-block" style="margin-bottom: 2px" /> Search bar
-
-You can use the search bar to look for an address and navigate to it on the map.
-
-### <LocateFixed size="16" class="inline-block" style="margin-bottom: 2px" /> Locate button
-
-The locate button centers the map on your current location.
+Kontrole na vrhu vam omogućavaju da uvećate <Plus size="16" class="inline-block" style="margin-bottom: 2px" /> i smanjite <Minus size="16" class="inline-block" style="margin-bottom: 2px" />, i da promenite orijentaciju i nagib mape <Compass size="16" class="inline-block" style="margin-bottom: 2px" />.
 
 <DocsNote>
 
-This only works if you have allowed your browser and <b>gpx.studio</b> to access your location.
+Da biste kontrolisali orijentaciju i nagib mape, možete je prevlačiti dok držite pritisnut taster <kbd>Ctrl</kbd>.
 
 </DocsNote>
 
-### <PersonStanding size="16" class="inline-block" style="margin-bottom: 2px" /> Street view
+### <Search size="16" class="inline-block" style="margin-bottom: 2px" /> Traka za pretragu
 
-This button can be used to enable street view mode on the map.
-Depending on the street view source chosen in the [settings](./menu/settings), street view imagery can be accessed differently.
+Možete koristiti traku za pretragu da biste potražili adresu i došli do nje na mapi.
 
-- <a href="https://www.mapillary.com/" target="_blank">Mapillary</a>: the street view coverage will appear as green lines on the map. When zoomed in enough, green dots will show the exact locations where street view imagery is available. Hovering over a green dot will show the street view image at that location.
-- <a href="https://www.google.com/streetview/" target="_blank">Google Street View</a>: click on the map to open a new tab with the street view imagery at that location.
+### <LocateFixed size="16" class="inline-block" style="margin-bottom: 2px" /> Dugme za lociranje
 
-### <Layers size="16" class="inline-block" style="margin-bottom: 2px" /> Map layers
+Dugme za lociranje centrira mapu na vašu trenutnu lokaciju.
 
-The map layers button allows you to switch between different basemaps, and toggle map overlays and categories of points of interest.
+<DocsNote>
 
-- **Basemaps** are background maps that present the main geographic features of the world.
-  Depending on their purpose, basemaps have different styles and levels of detail.
-  Only one basemap can be displayed at a time.
-- **Overlays** are additional layers that can be displayed on top of the basemap to provide complementary information.
-- **Points of interest** can be added to the map to show different categories of places, such as shops, restaurants, or accommodations.
+Ovo funkcioniše samo ako ste dozvolili svom pregledaču i <b>gpx.studio</b> da pristupe vašoj lokaciji.
+
+</DocsNote>
+
+### <PersonStanding size="16" class="inline-block" style="margin-bottom: 2px" /> Prikaz ulice
+
+Ovo dugme se može koristiti za omogućavanje režima prikaza ulice na mapi.
+U zavisnosti od izvora prikaza ulice izabranog u [podešavanjima](./menu/settings), slikama prikaza ulice može se pristupiti na različite načine.
+
+- <a href="https://www.mapillary.com/" target="_blank">Mapillary</a>: pokrivenost prikazom ulica će se pojaviti kao zelene linije na mapi. Kada se dovoljno uveća, zelene tačke će pokazati tačne lokacije gde su dostupne slike prikaza ulice. Prelazak pokazivača miša iznad zelene tačke prikazaće sliku ulice na toj lokaciji.
+- <a href="https://www.google.com/streetview/" target="_blank">Google Street View</a>: kliknite na mapu da biste otvorili novu karticu sa slikama Street View-a na toj lokaciji.
+
+### <Layers size="16" class="inline-block" style="margin-bottom: 2px" /> Slojevi mape
+
+Dugme za slojeve mape vam omogućava da prelazite između različitih osnovnih mapa i da menjate preklapanja mape i kategorije tačaka od interesa.
+
+- **Osnovne karte** su pozadinske karte koje prikazuju glavne geografske karakteristike sveta.
+  U zavisnosti od njihove namene, osnovne mape imaju različite stilove i nivoe detalja.
+  Samo jedna osnovna mapa može biti prikazana istovremeno.
+- **Slojevi** su dodatni slojevi koji se mogu prikazati preko osnovne mape radi pružanja dopunskih informacija.
+- **Zanimljivosti** mogu se dodati na mapu kako bi se prikazale različite kategorije mesta, kao što su prodavnice, restorani ili smeštaj.
 
 <div class="flex flex-col items-center">
 <DocsLayers />
 <span class="text-sm text-center mt-2">
 
-Hover over the map to show the <a href="https://hiking.waymarkedtrails.org" target="_blank">Waymarked Trails hiking</a> overlay on top of the <a href="https://www.maptiler.com/maps/outdoor-topo/" target="_blank">MapTiler Topo</a> basemap.
+Postavite pokazivač miša iznad mape da biste prikazali preklapanje <a href="https://hiking.waymarkedtrails.org" target="_blank">Planinarske staze sa obeleženim putevima</a> preko osnovne mape <a href="https://www.maptiler.com/maps/outdoor-topo/" target="_blank">MapTiler Topo</a>.
 
 </span>
 </div>
 
-A large collection of global and local basemaps and overlays is available in **gpx.studio**, as well as a selection of point-of-interest categories.
-They can be enabled in the [map layer settings dialog](./menu/settings).
+Velika kolekcija globalnih i lokalnih osnovnih mapa i slojeva dostupna je u **gpx.studio**, kao i izbor kategorija tačaka interesa.
+Mogu se omogućiti u [dijalogu za podešavanja sloja mape](./menu/settings).
 
-In these settings, you can also manage the opacity of the overlays.
+U ovim podešavanjima možete takođe upravljati neprozirnošću preklapanja.
 
-For advanced users, it is possible to add custom basemaps and overlays by providing <a href="https://en.wikipedia.org/wiki/Web_Map_Tile_Service" target="_blank">WMTS</a>, <a href="https://en.wikipedia.org/wiki/Web_Map_Service" target="_blank">WMS</a>, or <a href="https://maplibre.org/maplibre-style-spec/" target="_blank">MapLibre style JSON</a> URLs.
+Za napredne korisnike, moguće je dodati prilagođene osnovne mape i preklapanja pružanjem <a href="https://en.wikipedia.org/wiki/Web_Map_Tile_Service" target="_blank">WMTS</a>, <a href="https://en.wikipedia.org/wiki/Web_Map_Service" target="_blank">WMS</a> ili <a href="https://maplibre.org/maplibre-style-spec/" target="_blank">JSON stila MapLibre</a> URL-ova.
