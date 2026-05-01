@@ -35,6 +35,7 @@ export const basemaps: { [key: string]: string | StyleSpecification } = {
     maptilerTopo: `https://api.maptiler.com/maps/topo-v4/style.json?key=${maptilerKeyPlaceHolder}`,
     maptilerOutdoors: `https://api.maptiler.com/maps/outdoor-v4/style.json?key=${maptilerKeyPlaceHolder}`,
     maptilerSatellite: `https://api.maptiler.com/maps/hybrid-v4/style.json?key=${maptilerKeyPlaceHolder}`,
+    maptilerDarkMatter: `https://api.maptiler.com/maps/darkmatter/style.json?key=${maptilerKeyPlaceHolder}`,
     esriSatellite: {
         version: 8,
         sources: {
@@ -423,7 +424,7 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
                     "/snowtiles/{z}/{x}/{y}.png"
                 ],
                 tileSize: 256,
-                maxzoom: 14,
+                maxzoom: 15,
                 attribution: "Snow mask"
             }
         },
@@ -454,7 +455,7 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
                 id: "summits-poi",
                 type: "symbol",
                 source: "summits",
-                minzoom: 8,
+                minzoom: 12,
                 layout: {
                     "text-field": ["get", "nom"],
                     "text-size": 12,
@@ -516,6 +517,84 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
                     'text-halo-color': '#000000',
                     'text-halo-width': 1.5,
                     'text-halo-blur': 0.5
+                }
+            }
+        ]
+    },
+    bivouac: {
+        version: 8,
+        sources: {
+            bivouac: {
+                type: "geojson",
+                data: {
+                    type: "FeatureCollection",
+                    features: []
+                }
+            }
+        },
+        layers: [
+            {
+                id: "bivouac-areas",
+                type: "fill",
+                source: "bivouac",
+                paint: {
+                    "fill-color": [
+                        "match",
+                        ["get", "bivouac"],
+                        "Toléré", "#22c55e",
+                        "Déconseillé", "#f59e0b",
+                        "Interdit", "#ef4444",
+                        "#3b82f6"
+                    ],
+                    "fill-opacity": 0.25
+                }
+            },
+            {
+                id: "bivouac-outline",
+                type: "line",
+                source: "bivouac",
+                paint: {
+                    "line-color": "#ffffff",
+                    "line-width": 0.25
+                }
+            }
+        ]
+    },
+    traces: {
+        version: 8,
+        sources: {
+            traces: {
+                type: "geojson",
+                data: {
+                    type: "FeatureCollection",
+                    features: []
+                }
+            }
+        },
+        layers: [
+            {
+                id: "traces-line",
+                type: "line",
+                source: "traces",
+                minzoom: 8,
+                layout: {
+                    "line-cap": "round",
+                    "line-join": "round"
+                },
+                paint: {
+                    "line-color": [
+                        "interpolate",
+                        ["linear"],
+                        ["get", "lengthNorm"],
+
+                        0, "#2dd4bf",   // bleu-vert vif
+                        0.25, "#38bdf8",
+                        0.5, "#3b82f6",
+                        0.75, "#6366f1",
+                        1, "#7c3aed"    // violet
+                    ],
+                    "line-width": 2,
+                    "line-opacity": 1
                 }
             }
         ]
@@ -909,6 +988,7 @@ export const basemapTree: LayerTreeType = {
             maptilerTopo: true,
             maptilerOutdoors: true,
             maptilerSatellite: true,
+            maptilerDarkMatter: true,
             esriSatellite: true,
             openStreetMap: true,
             openTopoMap: true,
@@ -962,6 +1042,14 @@ export const basemapTree: LayerTreeType = {
 export const overlayTree: LayerTreeType = {
     overlays: {
         world: {
+            important: {
+                snowMask: true,
+                labels: true,
+                summits: true,
+                bivouac: true,
+                traces: true,
+                refuges: true,
+            },
             waymarked_trails: {
                 waymarkedTrailsHiking: true,
                 waymarkedTrailsCycling: true,
@@ -974,10 +1062,7 @@ export const overlayTree: LayerTreeType = {
             cyclOSMlite: true,
             mapterhornHillshade: true,
             openRailwayMap: true,
-            snowMask: true,
-            labels: true,
-            summits: true,
-            refuges: true,
+
         },
         countries: {
             france: {
@@ -1003,9 +1088,9 @@ export const overlayTree: LayerTreeType = {
 export const overpassTree: LayerTreeType = {
     points_of_interest: {
         food: {
-            bakery: true,
-            'food-store': true,
-            'eat-and-drink': true,
+            bakery: false,
+            'food-store': false,
+            'eat-and-drink': false,
         },
         amenities: {
             toilets: true,
@@ -1027,31 +1112,39 @@ export const overpassTree: LayerTreeType = {
             climbing: true,
         },
         bicycle: {
-            'bicycle-parking': true,
-            'bicycle-rental': true,
-            'bicycle-shop': true,
+            'bicycle-parking': false,
+            'bicycle-rental': false,
+            'bicycle-shop': false,
         },
         'public-transport': {
             'railway-station': true,
             'tram-stop': true,
             'bus-stop': true,
-            ferry: true,
+            ferry: false,
         },
         motorized: {
-            'fuel-station': true,
+            'fuel-station': false,
             parking: true,
-            garage: true,
+            garage: false,
         },
     },
 };
 
 // Default basemap used
-export const defaultBasemap = 'maptilerStreets';
+export const defaultBasemap = 'maptilerSatellite';
 
 // Default overlays used (none)
 export const defaultOverlays: LayerTreeType = {
     overlays: {
         world: {
+            important: {
+                snowMask: false,
+                labels: true,
+                summits: false,
+                refuges: false,
+                bivouac: false,
+                traces: false,
+            },
             waymarked_trails: {
                 waymarkedTrailsHiking: false,
                 waymarkedTrailsCycling: false,
@@ -1064,10 +1157,7 @@ export const defaultOverlays: LayerTreeType = {
             cyclOSMlite: false,
             mapterhornHillshade: false,
             openRailwayMap: false,
-            snowMask: false,
-            labels: true,
-            summits: false,
-            refuges: false,
+
         },
         countries: {
             france: {
@@ -1139,16 +1229,17 @@ export const defaultOverpassQueries: LayerTreeType = {
 export const defaultBasemapTree: LayerTreeType = {
     basemaps: {
         world: {
-            maptilerStreets: true,
+            maptilerStreets: false,
             maptilerTopo: true,
-            maptilerOutdoors: true,
+            maptilerOutdoors: false,
             maptilerSatellite: true,
+            maptilerDarkMatter: true,
             esriSatellite: false,
             openStreetMap: true,
-            openTopoMap: true,
+            openTopoMap: false,
             openHikingMap: true,
-            cyclOSM: true,
-            utagawaVTT: true,
+            cyclOSM: false,
+            utagawaVTT: false,
         },
         countries: {
             belgium: {
@@ -1195,7 +1286,18 @@ export const defaultBasemapTree: LayerTreeType = {
 // Default overlays shown in the layer menu
 export const defaultOverlayTree: LayerTreeType = {
     overlays: {
+        Randonnées: {
+            traces: true,
+            summits: true,
+            snowMask: true,
+        },
+        Exploration: {
+                labels: true,
+                refuges: true,
+                bivouac: true,
+            },
         world: {
+            
             waymarked_trails: {
                 waymarkedTrailsHiking: true,
                 waymarkedTrailsCycling: true,
@@ -1208,10 +1310,6 @@ export const defaultOverlayTree: LayerTreeType = {
             cyclOSMlite: false,
             mapterhornHillshade: false,
             openRailwayMap: false,
-            snowMask: true,
-            labels: true,
-            summits: true,
-            refuges: true,
         },
         countries: {
             france: {
@@ -1237,9 +1335,9 @@ export const defaultOverlayTree: LayerTreeType = {
 export const defaultOverpassTree: LayerTreeType = {
     points_of_interest: {
         food: {
-            bakery: true,
-            'food-store': true,
-            'eat-and-drink': true,
+            bakery: false,
+            'food-store': false,
+            'eat-and-drink': false,
         },
         amenities: {
             toilets: true,
@@ -1252,18 +1350,18 @@ export const defaultOverpassTree: LayerTreeType = {
         tourism: {
             attraction: false,
             viewpoint: false,
-            hotel: true,
-            campsite: true,
-            hut: true,
+            hotel: false,
+            campsite: false,
+            hut: false,
             picnic: false,
-            summit: true,
-            pass: true,
+            summit: false,
+            pass: false,
             climbing: false,
         },
         bicycle: {
             'bicycle-parking': false,
             'bicycle-rental': false,
-            'bicycle-shop': true,
+            'bicycle-shop': false,
         },
         'public-transport': {
             'railway-station': true,
@@ -1273,7 +1371,7 @@ export const defaultOverpassTree: LayerTreeType = {
         },
         motorized: {
             'fuel-station': false,
-            parking: false,
+            parking: true,
             garage: false,
         },
     },

@@ -6,7 +6,7 @@
     import { map } from '$lib/components/map/map';
     import { PUBLIC_MAPTILER_KEY } from '$env/static/public';
     import RefugePanel from '$lib/components/refuge/RefugePanel.svelte';
-
+    import BivouacPanel from '$lib/components/bivouac/BivouacPanel.svelte';
     let {
         maptilerKey = PUBLIC_MAPTILER_KEY,
         geolocate = true,
@@ -73,6 +73,7 @@
         {/if}
     </div>
     <RefugePanel />
+    <BivouacPanel />
 </div>
 
 <style lang="postcss">

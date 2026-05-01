@@ -3,11 +3,13 @@
     import { Button } from '$lib/components/ui/button';
     import Logo from '$lib/components/Logo.svelte';
     import Shortcut from '$lib/components/Shortcut.svelte';
+    import FilterDialog from './filter/Filter.svelte';
     import {
         Plus,
         Copy,
         Download,
         Undo2,
+        Funnel,
         Redo2,
         Trash2,
         Heart,
@@ -72,6 +74,7 @@
     import { boundsManager } from '$lib/logic/bounds';
     import { tick } from 'svelte';
     import { allowedPastes } from '$lib/components/file-list/sortable-file-list';
+    import { filterState } from './filter/utils.svelte';
 
     const {
         distanceUnits,
@@ -128,11 +131,11 @@
                         <Shortcut key="+" ctrl={true} />
                     </Menubar.Item>
                     <Menubar.Separator />
-                    <Menubar.Item onclick={triggerFileInput}>
-                        <FolderOpen size="16" />
-                        {i18n._('menu.open')}
-                        <Shortcut key="O" ctrl={true} />
-                    </Menubar.Item>
+                        <Menubar.Item onclick={triggerFileInput}>
+                            <FolderOpen size="16" />
+                            {i18n._('menu.open')}
+                            <Shortcut key="O" ctrl={true} />
+                        </Menubar.Item>
                     <Menubar.Separator />
                     <Menubar.Item
                         onclick={fileActions.duplicateSelection}
@@ -377,6 +380,14 @@
                         {i18n._('menu.toggle_3d')}
                         <Shortcut key={i18n._('menu.right_click_drag')} />
                     </Menubar.Item>
+                    <Menubar.Separator />
+                    <Menubar.Item inset onclick={() => {
+    filterState.update(s => ({ ...s, open: true }));
+}}>
+                        <Funnel size="16" />
+                        {i18n._('menu.filter_traces')}
+                        <Shortcut key="F6" />
+                    </Menubar.Item>
                 </Menubar.Content>
             </Menubar.Menu>
             <Menubar.Menu>
@@ -532,6 +543,7 @@
 
 <Export />
 <LayerControlSettings bind:open={layerSettingsOpen} />
+<FilterDialog />
 
 <svelte:window
     on:keydown={(e) => {

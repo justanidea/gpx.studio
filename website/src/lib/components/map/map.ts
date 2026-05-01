@@ -176,6 +176,11 @@ export class MapLibreGLMap {
             this._map.off('style.load', this.callOnLoadBinded);
         }
     }
+
+    get styleManager() {
+        return this._styleManager;
+    }
 }
 
 export const map = new MapLibreGLMap();
+

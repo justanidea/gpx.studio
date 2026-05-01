@@ -307,6 +307,7 @@
             "maptilerTopo": "MapTiler Topo",
             "maptilerOutdoors": "MapTiler Outdoors",
             "maptilerSatellite": "MapTiler Satellite",
+            "maptilerDarkMatter": "MapTiler Dark",
             "esriSatellite": "Esri Satellite",
             "openStreetMap": "OpenStreetMap",
             "openTopoMap": "OpenTopoMap",

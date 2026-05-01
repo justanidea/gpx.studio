@@ -17,7 +17,6 @@ export async function GET({ params }) {
 
     const url = `https://worldmaps.reliefmaps.io/styles/SnowMaskV3/${z}/${x}/${y}.png`;
     const response = await fetch(url);
-
     if (!response.ok) {
         throw error(404, 'tile not found');
     }
