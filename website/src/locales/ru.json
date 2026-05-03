@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "онлайн редактор GPX файлов",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "приложение",
         "embed_title": "онлайн редактор GPX файлов",
         "help_title": "помощь",
@@ -17,6 +17,8 @@
         "copy": "Копировать",
         "paste": "Вставить",
         "cut": "Вырезать",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Экспортировать...",
         "export_all": "Экспортировать все...",
         "export_options": "Параметры экспорта",
@@ -81,7 +83,8 @@
         "center": "По центру",
         "open_in": "Открыть в",
         "copy_coordinates": "Скопировать координаты",
-        "edit_osm": "Edit in OpenStreetMap"
+        "edit_osm": "Show Forecast on Ventusky",
+        "open_in_maps": "Open in Google Maps"
     },
     "toolbar": {
         "routing": {

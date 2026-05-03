@@ -2,6 +2,7 @@
     import { selectedBivouac } from '$lib/logic/bivouac';
     selectedBivouac.subscribe(v => {
     console.log("PANEL STORE UPDATE:", v);
+    console.log(selectedBivouac)
 });
 </script>
 

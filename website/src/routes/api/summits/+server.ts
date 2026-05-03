@@ -13,39 +13,48 @@ export async function GET({ url }) {
 
     // expected:
     // west,south,east,north
-    const [west,south,east,north] =
+    const [west, south, east, north] =
         bbox.split(',').map(Number);
 
     if (
-        [west,south,east,north]
+        [west, south, east, north]
             .some(v => Number.isNaN(v))
     ) {
         return json(
             { error: 'invalid bbox' },
-            { status:400 }
+            { status: 400 }
         );
     }
 
     // OSM Overpass query
-    const query = `[out:json][timeout:20];
-node["natural"="peak"]["name"](${south},${west},${north},${east});
-out body;`;
+    const query = `[out:json][timeout:25];
+
+(
+  // LACS / EAUX (inclut gros lacs via relations)
+  way["natural"="water"](${south},${west},${north},${east});
+  relation["natural"="water"](${south},${west},${north},${east});
+
+  // SOMMETS
+  node["natural"="peak"]["name"](${south},${west},${north},${east});
+);
+
+out center tags;`;
     try {
 
         const response = await fetch(
-    'https://overpass-api.de/api/interpreter',
-    {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'User-Agent': 'gpx-studio-fork/1.0 (contact: dev)'
+            'https://overpass-api.de/api/interpreter',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'User-Agent': 'gpx-studio-fork/1.0 (contact: dev)'
 
-        },
-        body: new URLSearchParams({
-    data: query
-})
-    }
-);
+                },
+                body: new URLSearchParams({
+                    data: query
+                })
+            }
+        );
         // console.debug("response", response.status)
         const body = new URLSearchParams({ data: query });
 
@@ -55,36 +64,43 @@ out body;`;
                 `Overpass error ${response.status}`
             );
         }
-
         const data = await response.json();
         const geojson = {
             type: 'FeatureCollection',
+            features: data.elements
+                .map((el: any) => {
+                    const lat = el.lat ?? el.center?.lat;
+                    const lon = el.lon ?? el.center?.lon;
 
-            features: data.elements.map((peak:any)=>({
+                    if (lat == null || lon == null) return null;
 
-                type:'Feature',
+                    const isPeak = el.tags?.natural === 'peak';
 
-                geometry:{
-                    type:'Point',
-                    coordinates:[
-                        peak.lon,
-                        peak.lat
-                    ]
-                },
+                    return {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [lon, lat]
+                        },
+                        properties: {
+                            nom:
+                                el.tags?.name
+                                    ? `${el.tags.name}${isPeak ? '\n' + (el.tags?.ele ?? '') + 'm' : ''}`
+                                    : '',
 
-                properties:{
-                    nom: peak.tags?.name + '\n' + peak.tags?.ele + 'm' || '',
-                    ele: peak.tags?.ele || null,
-                    natural:'peak'
-                }
+                            ele: el.tags?.ele ?? null,
 
-            }))
+                            natural: el.tags?.natural ?? el.tags?.water ?? null
+                        }
+                    };
+                })
+                .filter(Boolean)
         };
 
         return json(geojson);
 
     }
-    catch(err) {
+    catch (err) {
 
         console.error(
             'Summits API error:',
@@ -93,10 +109,10 @@ out body;`;
 
         return json(
             {
-                type:'FeatureCollection',
-                features:[]
+                type: 'FeatureCollection',
+                features: []
             },
-            { status:500 }
+            { status: 500 }
         );
     }
 }

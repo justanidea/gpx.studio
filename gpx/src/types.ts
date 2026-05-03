@@ -4,6 +4,8 @@ export type GPXFileType = {
     wpt: WaypointType[];
     trk: TrackType[];
     rte: RouteType[];
+
+    extensions?: Record<string, any>;
 };
 
 export type GPXFileAttributes = {

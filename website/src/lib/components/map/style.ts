@@ -119,7 +119,8 @@ export class StyleManager {
                         properties: {
                             name: t.name,
                             distance: t.distance,
-                            lengthNorm: this.normalize(t.distance, min, max)
+                            lengthNorm: this.normalize(t.distance, min, max),
+                            done: t.done === true
                         },
                         geometry: {
                             type: 'LineString',
@@ -250,7 +251,8 @@ export class StyleManager {
                         properties: {
                             name: t.name,
                             distance: t.distance,
-                            lengthNorm: this.normalize(t.distance, min, max)
+                            lengthNorm: this.normalize(t.distance, min, max),
+                            done: t.done === true
                         },
 
                         geometry: {
@@ -375,7 +377,7 @@ export class StyleManager {
 
     private handleBivouacClick(feature: maplibregl.MapGeoJSONFeature) {
         const p = feature.properties;
-
+        console.log(feature.properties);
         const data = {
             name: p?.nom,
             status: p?.bivouac,

@@ -85,7 +85,7 @@ export class MapLibreGLMap {
                                     place_name: result.display_name,
                                 };
                             });
-                        } catch (e) {}
+                        } catch (e) { }
                         return results;
                     },
                 },
@@ -179,6 +179,10 @@ export class MapLibreGLMap {
 
     get styleManager() {
         return this._styleManager;
+    }
+
+    get instance() {
+        return this._map;
     }
 }
 

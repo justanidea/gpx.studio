@@ -463,7 +463,12 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
                     "text-anchor": "top"
                 },
                 paint: {
-                    "text-color": "#a4ffb7",
+                    "text-color": [
+                        "case",
+                        ["==", ["get", "natural"], "peak"], "#a4ffb7",
+                        ["==", ["get", "natural"], "water"], "#72b8fe",
+                        "#ffffff"
+                    ],
                     "text-halo-color": "#000000",
                     "text-halo-width": 1.5,
                     "text-halo-blur": 0.5
@@ -583,15 +588,35 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
                 },
                 paint: {
                     "line-color": [
-                        "interpolate",
-                        ["linear"],
-                        ["get", "lengthNorm"],
+                        "case",
 
-                        0, "#2dd4bf",   // bleu-vert vif
-                        0.25, "#38bdf8",
-                        0.5, "#3b82f6",
-                        0.75, "#6366f1",
-                        1, "#7c3aed"    // violet
+                        ["==", ["get", "done"], true],
+
+                        // 🌿 DONE = gamme verte
+                        [
+                            "interpolate",
+                            ["linear"],
+                            ["get", "lengthNorm"],
+
+                            0, "#34d399",
+                            0.25, "#22c55e",
+                            0.5, "#16a34a",
+                            0.75, "#15803d",
+                            1, "#14532d"
+                        ],
+
+                        // 🎨 NOT DONE = ton gradient actuel
+                        [
+                            "interpolate",
+                            ["linear"],
+                            ["get", "lengthNorm"],
+
+                            0, "#2dd4bf",
+                            0.25, "#38bdf8",
+                            0.5, "#3b82f6",
+                            0.75, "#6366f1",
+                            1, "#7c3aed"
+                        ]
                     ],
                     "line-width": 2,
                     "line-opacity": 1
@@ -1095,6 +1120,7 @@ export const overpassTree: LayerTreeType = {
         amenities: {
             toilets: true,
             water: true,
+            lakes: true,
             shower: true,
             shelter: true,
             barrier: true,
@@ -1191,6 +1217,7 @@ export const defaultOverpassQueries: LayerTreeType = {
             toilets: false,
             water: false,
             shower: false,
+            lakes: false,
             shelter: false,
             barrier: false,
             cemetery: false,
@@ -1292,12 +1319,12 @@ export const defaultOverlayTree: LayerTreeType = {
             snowMask: true,
         },
         Exploration: {
-                labels: true,
-                refuges: true,
-                bivouac: true,
-            },
+            labels: true,
+            refuges: true,
+            bivouac: true,
+        },
         world: {
-            
+
             waymarked_trails: {
                 waymarkedTrailsHiking: true,
                 waymarkedTrailsCycling: true,
@@ -1342,6 +1369,7 @@ export const defaultOverpassTree: LayerTreeType = {
         amenities: {
             toilets: true,
             water: true,
+            lakes: true,
             shower: false,
             shelter: false,
             barrier: false,
@@ -1699,6 +1727,23 @@ export const overpassQueryData: Record<string, OverpassQueryData> = {
             amenity: 'ferry_terminal',
         },
         symbol: 'Anchor',
+    },
+    lakes: {
+        icon: {
+            svg: Droplet,
+            color: 'DeepSkyBlue',
+        },
+        tags: [
+            {
+                natural: 'water',
+                water: ['lake', 'reservoir'],
+            },
+            {
+                natural: 'water',
+                name: '*', // fallback pour les lacs mal tagués
+            },
+        ],
+        symbol: 'Lake',
     },
 };
 

@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "o editor online de arquivos GPX",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "aplicativo",
         "embed_title": "o editor online de arquivos GPX",
         "help_title": "ajuda",
@@ -17,6 +17,8 @@
         "copy": "Copiar",
         "paste": "Colar",
         "cut": "Cortar",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Exportar...",
         "export_all": "Exportar todos...",
         "export_options": "Opções de exportação",
@@ -81,7 +83,8 @@
         "center": "Centralizar",
         "open_in": "Abrir em",
         "copy_coordinates": "Copiar coordenadas",
-        "edit_osm": "Edit in OpenStreetMap"
+        "edit_osm": "Show Forecast on Ventusky",
+        "open_in_maps": "Open in Google Maps"
     },
     "toolbar": {
         "routing": {

@@ -4,7 +4,7 @@
     import Shortcut from '$lib/components/Shortcut.svelte';
     import CopyCoordinates from '$lib/components/map/gpx-layer/CopyCoordinates.svelte';
     import WithUnits from '$lib/components/WithUnits.svelte';
-    import { Dot, ExternalLink, Trash2 } from '@lucide/svelte';
+    import { Dot, Earth, CloudSun, ExternalLink, Trash2 } from '@lucide/svelte';
     import { currentTool, Tool } from '$lib/components/toolbar/tools';
     import { getSymbolKey, symbols } from '$lib/assets/symbols';
     import { i18n } from '$lib/i18n.svelte';
@@ -86,6 +86,27 @@
         </ScrollArea>
         <div class="mt-2 flex flex-col gap-1">
             <CopyCoordinates coordinates={waypoint.item.attributes} />
+
+            <Button
+                variant="outline"
+                class="justify-start"
+                href={`https://www.ventusky.com/fr/${waypoint.item.getLatitude().toFixed(3)};${waypoint.item.getLongitude().toFixed(3)}`}
+                target="_blank"
+            >
+                <CloudSun size="14" />
+                {i18n._('menu.edit_osm')}
+            </Button>
+
+            <Button
+                variant="outline"
+                class="justify-start"
+                href={`https://www.google.com/maps/dir/?api=1&destination=${waypoint.item.getLatitude().toFixed(6)},${waypoint.item.getLongitude().toFixed(6)}`}
+                target="_blank"
+            >
+                <Earth size="14" />
+                {i18n._('menu.open_in_maps')}
+            </Button>
+
             {#if $currentTool === Tool.WAYPOINT && selected}
                 <Button
                     variant="outline"

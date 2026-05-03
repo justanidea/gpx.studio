@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "l'éditeur de fichiers GPX en ligne",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "application",
         "embed_title": "l'éditeur de fichiers GPX en ligne",
         "help_title": "aide",
@@ -17,6 +17,8 @@
         "copy": "Copier",
         "paste": "Coller",
         "cut": "Couper",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Exporter...",
         "export_all": "Exporter tout...",
         "export_options": "Options d'exportation",

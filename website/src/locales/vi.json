@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "trình chỉnh sửa file GPX trực tuyến",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "ứng dụng",
         "embed_title": "trình chỉnh sửa file GPX trực tuyến",
         "help_title": "trợ giúp",
@@ -17,6 +17,8 @@
         "copy": "Sao chép",
         "paste": "Dán",
         "cut": "Cắt",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Xuất...",
         "export_all": "Xuất tất cả...",
         "export_options": "Tùy chọn xuất",

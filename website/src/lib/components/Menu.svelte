@@ -8,6 +8,7 @@
         Plus,
         Copy,
         Download,
+        SquareCheckBig,
         Undo2,
         Funnel,
         Redo2,
@@ -49,7 +50,13 @@
     import { map } from '$lib/components/map/map';
     import { editMetadata } from '$lib/components/file-list/metadata/utils.svelte';
     import { editStyle } from '$lib/components/file-list/style/utils.svelte';
-    import { exportState, ExportState } from '$lib/components/export/utils.svelte';
+    import {
+        exclude,
+        exportState,
+        ExportState,
+        saveAllFilesAsDone,
+        saveSelectedFilesAsDone,
+    } from '$lib/components/export/utils.svelte';
     import { anySelectedLayer } from '$lib/components/map/layer-control/utils';
     import { defaultOverlays } from '$lib/assets/layers';
     import LayerControlSettings from '$lib/components/map/layer-control/LayerControlSettings.svelte';
@@ -75,6 +82,7 @@
     import { tick } from 'svelte';
     import { allowedPastes } from '$lib/components/file-list/sortable-file-list';
     import { filterState } from './filter/utils.svelte';
+    import { get } from 'svelte/store';
 
     const {
         distanceUnits,
@@ -94,7 +102,7 @@
 
     const canUndo = fileActionManager.canUndo;
     const canRedo = fileActionManager.canRedo;
-
+    console.log("selection store value:", get(selection));
     function switchBasemaps() {
         [$currentBasemap, $previousBasemap] = [$previousBasemap, $currentBasemap];
     }
@@ -131,11 +139,11 @@
                         <Shortcut key="+" ctrl={true} />
                     </Menubar.Item>
                     <Menubar.Separator />
-                        <Menubar.Item onclick={triggerFileInput}>
-                            <FolderOpen size="16" />
-                            {i18n._('menu.open')}
-                            <Shortcut key="O" ctrl={true} />
-                        </Menubar.Item>
+                    <Menubar.Item onclick={triggerFileInput}>
+                        <FolderOpen size="16" />
+                        {i18n._('menu.open')}
+                        <Shortcut key="O" ctrl={true} />
+                    </Menubar.Item>
                     <Menubar.Separator />
                     <Menubar.Item
                         onclick={fileActions.duplicateSelection}
@@ -161,6 +169,27 @@
                         <FileX size="16" />
                         {i18n._('menu.delete_all')}
                         <Shortcut key="⌫" ctrl={true} shift={true} />
+                    </Menubar.Item>
+                    <Menubar.Separator />
+                    <Menubar.Item
+                        onclick={async () => {
+                            // exportState.current = ExportState.SELECTION
+                            await saveSelectedFilesAsDone($exclude);
+                        }}
+                        disabled={$selection.size == 0}
+                    >
+                        <SquareCheckBig size="16" />
+                        {i18n._('menu.mark_as_done')}
+                    </Menubar.Item>
+                    <Menubar.Item
+                        onclick={async () => {
+                            // exportState.current = ExportState.SELECTION
+                            await saveAllFilesAsDone($exclude);
+                        }}
+                        disabled={$selection.size == 0}
+                    >
+                        <SquareCheckBig size="16" />
+                        {i18n._('menu.mark_all_as_done')}
                     </Menubar.Item>
                     <Menubar.Separator />
                     <Menubar.Item
@@ -381,9 +410,12 @@
                         <Shortcut key={i18n._('menu.right_click_drag')} />
                     </Menubar.Item>
                     <Menubar.Separator />
-                    <Menubar.Item inset onclick={() => {
-    filterState.update(s => ({ ...s, open: true }));
-}}>
+                    <Menubar.Item
+                        inset
+                        onclick={() => {
+                            filterState.update((s) => ({ ...s, open: true }));
+                        }}
+                    >
                         <Funnel size="16" />
                         {i18n._('menu.filter_traces')}
                         <Shortcut key="F6" />

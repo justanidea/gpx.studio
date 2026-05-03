@@ -96,13 +96,12 @@ export function parseGPX(gpxData: string): GPXFile {
                     };
                 }
             }
-
             return tagValue;
         },
     });
 
-    const parsed: GPXFileType = parser.parse(gpxData).gpx;
-
+    const raw = parser.parse(gpxData).gpx;
+    const parsed: GPXFileType = raw;
     // @ts-ignore
     if (parsed.metadata === '') {
         parsed.metadata = {};
@@ -113,7 +112,13 @@ export function parseGPX(gpxData: string): GPXFile {
 
 export function buildGPX(file: GPXFile, exclude: string[]): string {
     const gpx = file.toGPXFileType(exclude);
+    if ((file as any).extensions?.done) {
 
+        gpx.extensions = {
+            ...(gpx.extensions ?? {}),
+            done: true,
+        };
+    }
     let lastDate = undefined;
     const builder = new XMLBuilder({
         format: true,

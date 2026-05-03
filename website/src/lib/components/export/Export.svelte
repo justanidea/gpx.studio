@@ -29,16 +29,9 @@
     import { selection } from '$lib/logic/selection';
     import { gpxStatistics } from '$lib/logic/statistics';
     import { get } from 'svelte/store';
-
+    import { exportOptions, exclude } from '$lib/components/export/utils.svelte';
     let open = $derived(exportState.current !== ExportState.NONE);
-    let exportOptions: Record<string, boolean> = $state({
-        time: true,
-        hr: true,
-        cad: true,
-        atemp: true,
-        power: true,
-        extensions: false,
-    });
+    
     let hide: Record<string, boolean> = $derived.by(() => {
         if (exportState.current === ExportState.NONE) {
             return {
@@ -71,7 +64,6 @@
             };
         }
     });
-    let exclude = $derived(Object.keys(exportOptions).filter((key) => !exportOptions[key]));
 
     $effect(() => {
         if (open) {
@@ -106,9 +98,9 @@
                     class="bg-support grow"
                     onclick={async () => {
     if (exportState.current === ExportState.SELECTION) {
-        await saveSelectedFiles(exclude);
+        await saveSelectedFiles($exclude);
     } else if (exportState.current === ExportState.ALL) {
-        await saveAllFiles(exclude);
+        await saveAllFiles($exclude);
     }
 
     alert("Traces sauvegardées côté serveur");
@@ -122,9 +114,9 @@
                     class="grow"
                     onclick={() => {
                         if (exportState.current === ExportState.SELECTION) {
-                            exportSelectedFiles(exclude);
+                            exportSelectedFiles($exclude);
                         } else if (exportState.current === ExportState.ALL) {
-                            exportAllFiles(exclude);
+                            exportAllFiles($exclude);
                         }
                         open = false;
                         exportState.current = ExportState.NONE;
@@ -158,35 +150,35 @@
                 </div>
                 <div class="flex flex-row flex-wrap justify-center gap-x-6 gap-y-2">
                     <div class="flex flex-row items-center gap-1.5 {hide.time ? 'hidden' : ''}">
-                        <Checkbox id="export-time" bind:checked={exportOptions.time} />
+                        <Checkbox id="export-time" bind:checked={$exportOptions.time} />
                         <Label for="export-time" class="flex flex-row items-center gap-1">
                             <Zap size="16" />
                             {i18n._('quantities.time')}
                         </Label>
                     </div>
                     <div class="flex flex-row items-center gap-1.5 {hide.hr ? 'hidden' : ''}">
-                        <Checkbox id="export-heartrate" bind:checked={exportOptions.hr} />
+                        <Checkbox id="export-heartrate" bind:checked={$exportOptions.hr} />
                         <Label for="export-heartrate" class="flex flex-row items-center gap-1">
                             <HeartPulse size="16" />
                             {i18n._('quantities.heartrate')}
                         </Label>
                     </div>
                     <div class="flex flex-row items-center gap-1.5 {hide.cad ? 'hidden' : ''}">
-                        <Checkbox id="export-cadence" bind:checked={exportOptions.cad} />
+                        <Checkbox id="export-cadence" bind:checked={$exportOptions.cad} />
                         <Label for="export-cadence" class="flex flex-row items-center gap-1">
                             <Orbit size="16" />
                             {i18n._('quantities.cadence')}
                         </Label>
                     </div>
                     <div class="flex flex-row items-center gap-1.5 {hide.atemp ? 'hidden' : ''}">
-                        <Checkbox id="export-temperature" bind:checked={exportOptions.atemp} />
+                        <Checkbox id="export-temperature" bind:checked={$exportOptions.atemp} />
                         <Label for="export-temperature" class="flex flex-row items-center gap-1">
                             <Thermometer size="16" />
                             {i18n._('quantities.temperature')}
                         </Label>
                     </div>
                     <div class="flex flex-row items-center gap-1.5 {hide.power ? 'hidden' : ''}">
-                        <Checkbox id="export-power" bind:checked={exportOptions.power} />
+                        <Checkbox id="export-power" bind:checked={$exportOptions.power} />
                         <Label for="export-power" class="flex flex-row items-center gap-1">
                             <SquareActivity size="16" />
                             {i18n._('quantities.power')}
@@ -195,7 +187,7 @@
                     <div
                         class="flex flex-row items-center gap-1.5 {hide.extensions ? 'hidden' : ''}"
                     >
-                        <Checkbox id="export-extensions" bind:checked={exportOptions.extensions} />
+                        <Checkbox id="export-extensions" bind:checked={$exportOptions.extensions} />
                         <Label for="export-extensions" class="flex flex-row items-center gap-1">
                             <Earth size="16" />
                             {i18n._('quantities.osm_extensions')}

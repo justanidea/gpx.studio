@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "editorul online de fişiere GPX",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "aplicație",
         "embed_title": "editorul online de fişiere GPX",
         "help_title": "ajutor",
@@ -17,6 +17,8 @@
         "copy": "Copiază",
         "paste": "Lipire",
         "cut": "Taie",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Exportă...",
         "export_all": "Exportă tot...",
         "export_options": "Opțiuni de export",
@@ -81,7 +83,8 @@
         "center": "Center",
         "open_in": "Open in",
         "copy_coordinates": "Copiază coordonatele",
-        "edit_osm": "Edit in OpenStreetMap"
+        "edit_osm": "Show Forecast on Ventusky",
+        "open_in_maps": "Open in Google Maps"
     },
     "toolbar": {
         "routing": {

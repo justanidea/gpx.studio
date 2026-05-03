@@ -5,6 +5,23 @@ import { buildGPX, type GPXFile } from 'gpx';
 import FileSaver from 'file-saver';
 import JSZip from 'jszip';
 import { get } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
+import { map } from '../map/map';
+
+export const exportOptions = writable({
+    time: true,
+    hr: true,
+    cad: true,
+    atemp: true,
+    power: true,
+    extensions: false,
+});
+
+export const exclude = derived(exportOptions, ($opt) =>
+    Object.keys($opt).filter((key) => !$opt[key])
+);
+
+const gpxCache = new Map<string, string>();
 
 export enum ExportState {
     NONE,
@@ -65,24 +82,139 @@ async function exportFilesAsZip(fileIds: string[], exclude: string[]) {
     }
 }
 
-async function saveFiles(fileIds: string[], exclude: string[]) {
-    const filesPayload = [];
+function markAsDone(file: GPXFile) {
+    if (!file.extensions) {
+        file.extensions = {};
+    }
+    if (file.extensions.done === true) {
+        file.extensions.done = false;
+    } else {
+        file.extensions.done = true;
+    }
+}
 
+function resolveFiles(fileIds: string[]) {
+    const files: GPXFile[] = [];
+
+    for (const id of fileIds) {
+        const file = fileStateCollection.getFile(id);
+        if (file) files.push(file);
+    }
+
+    return files;
+}
+
+function normalizeName(name: string) {
+    return String(name || 'trace')
+        .toLowerCase()
+        .replace(/[\/\\:*?"<>|]/g, '')   // enlève caractères invalides
+        .replace(/[\s_-]+/g, '')        // enlève espaces, _ et -
+        .normalize('NFKD');             // normalisation unicode
+}
+
+
+function toggleDoneInSourceBatch(
+    data: GeoJSON.FeatureCollection,
+    fileNames: string[]
+): GeoJSON.FeatureCollection {
+    const nameSet = new Set(fileNames.map(normalizeName));
+
+    let changed = false;
+
+    const features = data.features.map((f: any) => {
+        const props = f.properties ?? {};
+
+        if (!nameSet.has(normalizeName(props.name))) {
+            return f;
+        }
+
+        changed = true;
+        return {
+            ...f,
+            properties: {
+                ...props,
+                done: !props.done,
+            },
+        };
+    });
+
+    return changed ? { ...data, features } : data;
+}
+export async function saveSelectedFilesAsDone(exclude: string[]) {
+
+    const fileIds: string[] = [];
+    selection.applyToOrderedSelectedItemsFromFile((fileId) => {
+        fileIds.push(fileId);
+    });
+
+    const source = map.instance?.getSource("traces") as maplibregl.GeoJSONSource;
+    if (!source) return;
+    const data = source.serialize().data;
+    const fileNames: string[] = [];
     for (const fileId of fileIds) {
         const file = fileStateCollection.getFile(fileId);
         if (!file) continue;
 
-        filesPayload.push({
-            name: file.metadata.name || "trace",
-            gpx: buildGPX(file, exclude)
-        });
+        markAsDone(file);
+        fileNames.push(file.metadata.name || "");
     }
+    const updated = toggleDoneInSourceBatch(data, fileNames);
+
+    if (updated !== data) {
+        source.setData(updated);
+    }
+    await saveFiles(fileIds, exclude);
+}
+
+export async function saveAllFilesAsDone(exclude: string[]) {
+    const fileIds: string[] = [];
+
+    const ordered = get(settings.fileOrder);
+
+    for (const fileId of ordered) {
+        fileIds.push(fileId);
+    }
+    
+    for (const fileId of fileIds) {
+        const file = fileStateCollection.getFile(fileId);
+        if (!file) continue;
+
+        markAsDone(file);
+    }
+
+    await saveFiles(fileIds, exclude);
+}
+
+async function saveFiles(fileIds: string[], exclude: string[]) {
+    const files = resolveFiles(fileIds);
+
+    const filesPayload = files.map(file => ({
+        name: file.metadata.name || "trace",
+        gpx: buildCachedGPX(file, exclude)
+    }));
 
     await fetch('/api/save-trace', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ files: filesPayload })
     });
+}
+
+function buildCachedGPX(file: GPXFile, exclude: string[]) {
+    const key = JSON.stringify({
+        id: file._data.id,
+        done: file.extensions?.done,
+        exclude
+    });
+
+    if (gpxCache.has(key)) {
+        return gpxCache.get(key)!;
+    }
+
+    const gpx = buildGPX(file, exclude);
+    gpxCache.set(key, gpx);
+
+    return gpx;
 }
 
 export async function saveSelectedFiles(exclude: string[]) {

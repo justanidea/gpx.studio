@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "GPX fitxategi editorea",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "aplikazioa",
         "embed_title": "lineako GPX fitxategi editorea",
         "help_title": "laguntza",
@@ -17,6 +17,8 @@
         "copy": "Kopiatu",
         "paste": "Itsatsi",
         "cut": "Ebaki",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Esportatu...",
         "export_all": "Esportatu guztia...",
         "export_options": "Esportazio-aukerak",

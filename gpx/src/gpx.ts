@@ -126,7 +126,20 @@ export class GPXFile extends GPXTreeNode<Track> {
     wpt: Waypoint[];
     trk: Track[];
     rte: RouteType[];
+    extensions?: {
+        done?: boolean;
+        [key: string]: any;
+    };
 
+    private toBoolean(value: any): boolean | undefined {
+        if (value === undefined || value === null) return undefined;
+        if (value === true || value === false) return value;
+        if (typeof value === 'string') {
+            return value.toLowerCase() === 'true';
+        }
+        return Boolean(value);
+    }
+    
     constructor(gpx?: (GPXFileType & { _data?: any }) | GPXFile) {
         super();
         if (gpx) {
@@ -139,6 +152,9 @@ export class GPXFile extends GPXTreeNode<Track> {
                         href: 'https://gpx.studio',
                     },
                 },
+            };
+            this.extensions = {
+                done: this.toBoolean((gpx as any).extensions?.done),
             };
             this.wpt = gpx.wpt
                 ? gpx.wpt.map((waypoint, index) => new Waypoint(waypoint, index))
@@ -642,8 +658,8 @@ export class Track extends GPXTreeNode<TrackSegment> {
             extensions:
                 this.extensions && this.extensions['gpx_style:line']
                     ? {
-                          'gpx_style:line': this.getValidStyle(),
-                      }
+                        'gpx_style:line': this.getValidStyle(),
+                    }
                     : undefined,
             trkseg: this.trkseg.map((seg) => seg.toTrackSegmentType(exclude)),
         };
@@ -950,7 +966,7 @@ export class TrackSegment extends GPXTreeLeaf {
         statistics.global.time.total =
             statistics.global.time.start && statistics.global.time.end
                 ? (statistics.global.time.end.getTime() - statistics.global.time.start.getTime()) /
-                  1000
+                1000
                 : 0;
         statistics.global.speed.total =
             statistics.global.time.total > 0
@@ -967,12 +983,12 @@ export class TrackSegment extends GPXTreeLeaf {
             (start, end) =>
                 points[start].time && points[end].time
                     ? (3600 *
-                          (statistics.local.data[end].distance.total -
-                              statistics.local.data[start].distance.total)) /
-                      Math.max(
-                          (points[end].time.getTime() - points[start].time.getTime()) / 1000,
-                          1
-                      )
+                        (statistics.local.data[end].distance.total -
+                            statistics.local.data[start].distance.total)) /
+                    Math.max(
+                        (points[end].time.getTime() - points[start].time.getTime()) / 1000,
+                        1
+                    )
                     : undefined,
             (value, index) => {
                 statistics.local.data[index].speed = value;
@@ -1199,8 +1215,8 @@ export class TrackSegment extends GPXTreeLeaf {
                     points.length > 0
                         ? points[points.length - 1]
                         : start > 0
-                          ? trkpt[start - 1]
-                          : undefined;
+                            ? trkpt[start - 1]
+                            : undefined;
                 if (trkpt[end + 1].time === undefined) {
                     // Add timestamps to points after [start, end] because they are missing
                     trkpt.splice(
@@ -1233,8 +1249,8 @@ export class TrackSegment extends GPXTreeLeaf {
         if (newPreviousTimestamp && originalEndTimestamp && !originalNextTimestamp) {
             originalNextTimestamp = new Date(
                 newPreviousTimestamp.getTime() +
-                    originalEndTimestamp.getTime() -
-                    originalStartTimestamp.getTime()
+                originalEndTimestamp.getTime() -
+                originalStartTimestamp.getTime()
             );
         }
         if (
@@ -1244,8 +1260,8 @@ export class TrackSegment extends GPXTreeLeaf {
         ) {
             let newStartTimestamp = new Date(
                 newPreviousTimestamp.getTime() +
-                    originalNextTimestamp.getTime() -
-                    originalEndTimestamp.getTime()
+                originalNextTimestamp.getTime() -
+                originalEndTimestamp.getTime()
             );
 
             let trkpt = og.trkpt.map(
@@ -1255,7 +1271,7 @@ export class TrackSegment extends GPXTreeLeaf {
                         ele: point.ele,
                         time: new Date(
                             newStartTimestamp.getTime() +
-                                (originalEndTimestamp.getTime() - og.trkpt[i].time.getTime())
+                            (originalEndTimestamp.getTime() - og.trkpt[i].time.getTime())
                         ),
                         extensions: cloneJSON(point.extensions),
                         _data: cloneJSON(point._data),
@@ -1531,9 +1547,9 @@ export class Waypoint {
         this.desc = waypoint.desc === '' ? undefined : waypoint.desc;
         this.link =
             !waypoint.link ||
-            !waypoint.link.attributes ||
-            !waypoint.link.attributes.href ||
-            waypoint.link.attributes.href === ''
+                !waypoint.link.attributes ||
+                !waypoint.link.attributes.href ||
+                waypoint.link.attributes.href === ''
                 ? undefined
                 : waypoint.link;
         this.sym = waypoint.sym === '' ? undefined : waypoint.sym;

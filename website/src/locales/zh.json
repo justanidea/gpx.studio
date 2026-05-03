@@ -1,6 +1,7 @@
 {
     "metadata": {
-        "home_title": "在线 GPX 文件编辑器",
+        "home_title": "UNOFFICIAL GPX EDITOR",
+         "home_title": "在线 GPX 文件编辑器",
         "app_title": "app",
         "embed_title": "在线 GPX 文件编辑器",
         "help_title": "帮助",
@@ -17,6 +18,8 @@
         "copy": "复制",
         "paste": "粘贴",
         "cut": "剪切",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "导出...",
         "export_all": "导出全部…",
         "export_options": "导出选项",

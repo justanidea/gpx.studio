@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "the online GPX file editor",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "app",
         "embed_title": "the online GPX file editor",
         "help_title": "help",
@@ -17,11 +17,13 @@
         "copy": "Copy",
         "paste": "Paste",
         "cut": "Cut",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Export...",
         "export_all": "Export all...",
         "export_options": "Export options",
         "support_message": "Dette værktøj er gratis at bruge, men ikke gratis at holde ved lige. Overvej venligst at støtte dette website, hvis du bruger det regelmæssigt. Tak!",
-        "support_button": "Help keep the website free",
+        "support_button": "Make this trace public",
         "download_file": "Download file",
         "download_files": "Download files",
         "edit": "Edit",
@@ -82,7 +84,8 @@
         "center": "Center",
         "open_in": "Open in",
         "copy_coordinates": "Kopier koordinater",
-        "edit_osm": "Edit in OpenStreetMap"
+        "edit_osm": "Show Forecast on Ventusky",
+        "open_in_maps": "Open in Google Maps"
     },
     "toolbar": {
         "routing": {

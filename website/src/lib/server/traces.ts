@@ -1942,6 +1942,8 @@ async function loadFileTrace(file: string) {
 
     const estimatedDays = estimateDays(distance, ascent);
 
+    const doneState = gpxFile.extensions?.done === true;
+
     const trace = {
         name: file.replace(/\.(gpx|kml)$/, ''),
         file,
@@ -1950,8 +1952,9 @@ async function loadFileTrace(file: string) {
         maxAltitude: maxAltitude,
         ascent: ascent,
         estimatedDays: estimatedDays,
+        done: doneState
     };
-    console.log(`Loaded trace ${file}: distance=${distance.toFixed(2)}km, ascent=${ascent}m, estimatedDays=${estimatedDays}`);
+    console.log(`Loaded trace ${file}: distance=${distance.toFixed(2)}km, ascent=${ascent}m, estimatedDays=${estimatedDays}, done=${JSON.stringify(gpxFile.extensions?.done)}`);
     fileCache.set(file, trace);
     fileMtime.set(file, stat.mtimeMs);
 

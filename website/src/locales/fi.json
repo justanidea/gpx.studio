@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "GPX-tiedostojen muokkaus verkossa",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "sovellus",
         "embed_title": "GPX-tiedostojen muokkaus verkossa",
         "help_title": "apua",
@@ -17,6 +17,8 @@
         "copy": "Kopioi",
         "paste": "Liitä",
         "cut": "Leikkaa",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Vie...",
         "export_all": "Vie kaikki...",
         "export_options": "Vientiasetukset",
@@ -81,7 +83,8 @@
         "center": "Keskitä",
         "open_in": "Avaa",
         "copy_coordinates": "Copy coordinates",
-        "edit_osm": "Edit in OpenStreetMap"
+        "edit_osm": "Show Forecast on Ventusky",
+        "open_in_maps": "Open in Google Maps"
     },
     "toolbar": {
         "routing": {

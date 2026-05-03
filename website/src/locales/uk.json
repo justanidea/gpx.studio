@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "онлайн-редактор файлів GPX",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "додаток",
         "embed_title": "онлайн-редактор файлів GPX",
         "help_title": "допомога",
@@ -17,6 +17,8 @@
         "copy": "Копіювати",
         "paste": "Вставити",
         "cut": "Вирізати",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Експорт...",
         "export_all": "Експортувати все...",
         "export_options": "Параметри експорту",

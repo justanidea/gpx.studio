@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "l'editor de fitxers GPX en línia",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "app",
         "embed_title": "l'editor de fitxers GPX en línia",
         "help_title": "ajuda",
@@ -17,6 +17,8 @@
         "copy": "Copiar",
         "paste": "Enganxar",
         "cut": "Tallar",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "Exportar...",
         "export_all": "Exportar tot...",
         "export_options": "Opcions d'exportació",

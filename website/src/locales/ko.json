@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "home_title": "온라인 GPX 파일 편집기",
+        "home_title": "UNOFFICIAL GPX EDITOR",
         "app_title": "앱",
         "embed_title": "온라인 GPX 파일 편집기",
         "help_title": "도움말",
@@ -17,6 +17,8 @@
         "copy": "복사",
         "paste": "붙여넣기",
         "cut": "잘라내기",
+        "mark_as_done": "Mark as Done",
+        "mark_all_as_done": "Mark All as Done",
         "export": "내보내기...",
         "export_all": "모두 내보내기...",
         "export_options": "내보내기 설정",
@@ -81,7 +83,8 @@
         "center": "중앙",
         "open_in": "Open in",
         "copy_coordinates": "Copy coordinates",
-        "edit_osm": "Edit in OpenStreetMap"
+        "edit_osm": "Show Forecast on Ventusky",
+        "open_in_maps": "Open in Google Maps"
     },
     "toolbar": {
         "routing": {

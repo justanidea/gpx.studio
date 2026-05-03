@@ -4,7 +4,7 @@
     import CopyCoordinates from '$lib/components/map/gpx-layer/CopyCoordinates.svelte';
     import * as Card from '$lib/components/ui/card';
     import WithUnits from '$lib/components/WithUnits.svelte';
-    import { Compass, Earth, Mountain, Timer } from '@lucide/svelte';
+    import { CloudSun, Compass, Earth, Mountain, Timer } from '@lucide/svelte';
     import { i18n } from '$lib/i18n.svelte';
     import type { PopupItem } from '$lib/components/map/map-popup';
     import { map } from '$lib/components/map/map';
@@ -41,11 +41,20 @@
             <Button
                 variant="outline"
                 class="justify-start"
-                href={`https://www.openstreetmap.org/edit?#map=${(($map?.getZoom() ?? 17) + 1).toFixed(0)}/${trackpoint.item.getLatitude().toFixed(5)}/${trackpoint.item.getLongitude().toFixed(5)}`}
+                href={`https://www.ventusky.com/fr/${trackpoint.item.getLatitude().toFixed(3)};${trackpoint.item.getLongitude().toFixed(3)}`}
+                target="_blank"
+            >
+                <CloudSun size="14" />
+                {i18n._('menu.edit_osm')}
+            </Button>
+            <Button
+                variant="outline"
+                class="justify-start"
+                href={`https://www.google.com/maps/dir/?api=1&destination=${trackpoint.item.getLatitude().toFixed(6)},${trackpoint.item.getLongitude().toFixed(6)}`}
                 target="_blank"
             >
                 <Earth size="14" />
-                {i18n._('menu.edit_osm')}
+                {i18n._('menu.open_in_maps')}
             </Button>
         {/if}
     </Card.Content>
