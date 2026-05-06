@@ -1,176 +1,81 @@
 import { json } from '@sveltejs/kit';
 
-let cache: any = null;
+import { enrichFeature } from '$lib/bivouac/enrich';
+import { adaptIGNFeature } from '$lib/bivouac/adapters';
+
+import rnnData from '$lib/bivouac/storedData/rnn.json';
+import pnData from '$lib/bivouac/storedData/pn.json';
+import pnrData from '$lib/bivouac/storedData/pnr.json';
+import rbData from '$lib/bivouac/storedData/rb.json';
+import rncfData from '$lib/bivouac/storedData/rncf.json';
+import { rulesMap } from '$lib/bivouac/rules';
+
+let cache = null;
 let cacheTime = 0;
 const TTL = 1000 * 60 * 60;
 
-function getAllPoints(coords: any): number[][] {
-    const points: number[][] = [];
-
-    const walk = (c: any) => {
-        if (typeof c[0] === 'number') {
-            points.push(c);
-        } else {
-            for (const sub of c) walk(sub);
-        }
-    };
-
-    walk(coords);
-    return points;
+function process(data, type) {
+    console.log("Type is:", type, "with", data.length, "features");
+    return data
+        .map(f => adaptIGNFeature(f, type))
+        .map(f => enrichFeature(f));
 }
 
-function intersectsBBox(feature, bbox) {
-    const coords = feature.geometry.coordinates;
-    const points = getAllPoints(coords);
-
-    for (const [lng, lat] of points) {
-        if (
-            lng >= bbox.minX &&
-            lng <= bbox.maxX &&
-            lat >= bbox.minY &&
-            lat <= bbox.maxY
-        ) {
-            return true;
-        }
+function matchBivouacRule(feature: any): string {
+    switch (feature.properties?.bivouac) {
+        case "Toléré":
+            return "allowed";
+        case "Déconseillé":
+            return "restricted";
+        case "Interdit":
+            return "forbidden";
+        default:
+            return feature.properties?.bivouac ?? "unknown";
     }
-
-    return false;
-}
-
-const rnnRulesMap: Record<string, any> = {
-    RNN112: {
-        bivouac: "interdit",
-        reglementation: "Règlement spécifique du Haut-Jura"
-    },
-    RNN045: {
-        bivouac: "toléré",
-        reglementation: "Autorisé uniquement de 19h à 9h"
-    }
-};
-
-function enrichFeature(feature) {
-    const id = feature.properties?.id_local;
-
-    const rules = rnnRulesMap[id] ?? {
-        bivouac: "inconnu",
-        reglementation: `${id}: Pas de données, se renseigner !`
-    };
-
-    return {
-        ...feature,
-        properties: {
-            ...feature.properties,
-            bivouac: "RNN",
-            reglementation: rules.reglementation,
-        }
-    };
-}
-
-function featureIntersectsBbox(feature, bbox) {
-    const coords = feature.geometry.coordinates;
-
-    let minLng = Infinity, minLat = Infinity;
-    let maxLng = -Infinity, maxLat = -Infinity;
-
-    for (const ring of coords) {
-        for (const [lng, lat] of ring) {
-            minLng = Math.min(minLng, lng);
-            minLat = Math.min(minLat, lat);
-            maxLng = Math.max(maxLng, lng);
-            maxLat = Math.max(maxLat, lat);
-        }
-    }
-
-    return !(
-        maxLng < bbox.minX ||
-        minLng > bbox.maxX ||
-        maxLat < bbox.minY ||
-        minLat > bbox.maxY
-    );
-}
-
-const bbox = {
-    minX: 6.792297,
-    maxX: 6.892548,
-    minY: 45.704261,
-    maxY: 46.143210
-};
+}   
 
 export async function GET() {
     const now = Date.now();
 
     if (cache && now - cacheTime < TTL) {
-        return json(cache, {
-            headers: {
-                'Cache-Control': 'public, max-age=3600'
-            }
-        });
+        return json(cache);
     }
 
-    try {
-        console.debug("Fetching bivouac + nature layers");
+    // =========================
+    // STATIC DATASETS
+    // =========================
+    const rnnFeatures = process(rnnData, "RNN");
+    const pnFeatures = process(pnData, "PN");
+    const pnrFeatures = process(pnrData, "PNR");
+    const rbFeatures = process(rbData, "RB");
+    const rncfFeatures = process(rncfData, "RNCF");
 
-        // 1. bivouac
-        const bivouacRes = await fetch(
-            'https://reserve-bivouac74.fr/api/map/?map_layer=zonage_bivouac&fields=bivouac&fields=nom&fields=color&fields=fillcolor&fields=capacite&fields=report&fields=reglementation&fields=reservable&fields=quotas'
-        );
+    const f = pnFeatures[7];
+    // =========================
+    // DYNAMIC BIVOUAC (only external)
+    // =========================
+    const bivRes = await fetch(
+        'https://reserve-bivouac74.fr/api/map/?map_layer=zonage_bivouac&fields=bivouac&fields=nom&fields=color&fields=fillcolor&fields=capacite&fields=report&fields=reglementation&fields=reservable&fields=quotas'
+    );
 
-        if (!bivouacRes.ok) throw new Error("Bivouac API error");
-
-        const bivouacData = await bivouacRes.json();
-
-        // 2. IGN RNN (exemple bbox large ou filtrée)
-        const rnnRes = await fetch(
-            'https://apicarto.ign.fr/api/nature/rnn'
-        );
-        // console.log(await rnnRes.text());
-        // const rnrRes = await fetch(
-        //     'https://apicarto.ign.fr/api/nature/rnr'
-        // );
-
-        const rnnData = await rnnRes.json();
-
-
-        const enrichedRNN = rnnData.features
-    .filter(f => !intersectsBBox(f, bbox))
-    .map(f => {
-        const enriched = enrichFeature(f);
-
-        return {
-            ...enriched,
-            properties: {
-                ...enriched.properties,
-                bivouac: "RNN: bivouac potentiellement interdit"
-            }
-        };
-    });
-        // for (const f of enrichedRNN) {
-        //     console.log(f.properties?.name, f.properties?.bivouac);
-        // }
-        // const rnrData = await rnrRes.json();
-        console.debug(`Bivouac: ${bivouacData.content.length} features, RNN: ${rnnData.features.length} features (filtered to ${enrichedRNN.length})`);
-        // 3. merge features
-        const geojson = {
-            type: "FeatureCollection",
-            features: [
-                ...enrichedRNN,
-                ...bivouacData.content,
-
-                // ...(rnrData.features ?? [])
-            ]
-        };
-
-        cache = geojson;
-        cacheTime = now;
-
-        return json(geojson, {
-            headers: {
-                'Cache-Control': 'public, max-age=3600'
-            }
-        });
-
-    } catch (error) {
-        console.error(error);
-        return json({ error: 'failed' }, { status: 500 });
+    const bivData = await bivRes.json();
+    for (const feature of bivData.content) {
+        feature.properties.bivouac = matchBivouacRule(feature);
     }
+    const geojson = {
+        type: "FeatureCollection",
+        features: [
+            ...pnFeatures,
+            ...pnrFeatures,
+            ...rnnFeatures,
+            ...rncfFeatures,
+            ...rbFeatures,
+            ...bivData.content
+        ]
+    };
+
+    cache = geojson;
+    cacheTime = now;
+
+    return json(geojson);
 }

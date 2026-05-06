@@ -1,5 +1,3 @@
-import { settings } from '$lib/logic/settings';
-import { get, type Writable } from 'svelte/store';
 import {
     basemaps,
     defaultBasemap,
@@ -9,13 +7,13 @@ import {
 } from '$lib/assets/layers';
 import { getLayers } from '$lib/components/map/layer-control/utils';
 import { i18n } from '$lib/i18n.svelte';
-import { selectedRefuge, refugeLoading } from '$lib/logic/refuge';
-import { selectedBivouac } from '$lib/logic/bivouac';
+import { loadFile, loadFiles } from '$lib/logic/file-actions';
+import { fileNamesMap } from '$lib/logic/fileNames';
 import { selectedFeature } from '$lib/logic/selectedFeature';
-import { fileStateCollection } from '$lib/logic/file-state';
 import { selection } from '$lib/logic/selection';
-import { loadFile } from '$lib/logic/file-actions';
-import { loadFiles } from '$lib/logic/file-actions';
+import { settings } from '$lib/logic/settings';
+import { traceSearchIndex } from '$lib/logic/traceSearchIndex';
+import { get, type Writable } from 'svelte/store';
 const { currentBasemap, fileOrder, currentOverlays, customLayers, opacities, terrainSource } = settings;
 
 const emptySource: maplibregl.GeoJSONSourceSpecification = {
@@ -90,7 +88,6 @@ export class StyleManager {
 
             map_.on('style.load', async () => {
                 this.cacheBasemapLabels(map_);
-                this.addTracesLayer(map_);
 
                 if (this._isStartup) {
                     this.hideBasemapLabels(map_);
@@ -103,64 +100,33 @@ export class StyleManager {
                 await this.updateRefuges(map_);
 
                 this.updateBivouac(map_);
-                const res = await fetch('/api/traces');
-                const traces = await res.json();
-                const lengths = traces.map(t => t.distance);
-
-                const min = Math.min(...lengths);
-                const max = Math.max(...lengths);
-                console.log(
-                    map_.getStyle().layers.map(l => l.id)
-                );
-                const geojson = {
-                    type: 'FeatureCollection',
-                    features: traces.map((t: any) => ({
-                        type: 'Feature',
-                        properties: {
-                            name: t.name,
-                            distance: t.distance,
-                            lengthNorm: this.normalize(t.distance, min, max),
-                            done: t.done === true
-                        },
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: t.coordinates
-                        }
-                    }))
-                };
-
-                const source = map_.getSource('traces') as maplibregl.GeoJSONSource;
-                source.setData(geojson);
+                await this.updateTracesLayer(map_);
 
             });
-                map_.on('idle', () => {
-                if (map_.getLayer('refuges-poi')) {
-                    map_.moveLayer('refuges-poi', 'tracks-end');
-                }
-                if (map_.getLayer('summits-poi')) {
-                    console.log("got summits layer")
-                    map_.moveLayer('summits-poi', 'tracks-end');
-                };
-
-            });
+            map_.on('styledata', reorderLayers);
 
             map_.on('click', async (e) => {
                 const features = map_.queryRenderedFeatures(e.point);
                 const refuge = features.find(f => f.layer.id === 'refuges-poi');
                 const bivouac = features.find(f => f.layer.id === 'bivouac-areas');
                 const traces = features.find(f => f.layer.id === 'traces-line');
+                const naturalPOI = features.find(f => f.layer.id === 'natural-poi');
 
                 if (traces) {
-                    console.log(traces);
                     const name = traces.properties?.name;
                     if (!name) return;
 
-                    await this.openTraceInEditor(name);
+                    await openTraceInEditor(name);
                     return
                 }
 
                 if (refuge) {
                     await this.handleRefugeClick(refuge);
+                    return;
+                }
+
+                if (naturalPOI) {
+                    this.handleNaturalPoiClick(naturalPOI);
                     return;
                 }
 
@@ -176,6 +142,15 @@ export class StyleManager {
                 this.updateRefuges(map_);
                 this.updateSummits(map_);
             });
+
+            function reorderLayers() {
+                if (map_.getLayer('refuges-poi')) {
+                    map_.moveLayer('refuges-poi', 'tracks-end');
+                }
+                if (map_.getLayer('natural-poi')) {
+                    map_.moveLayer('natural-poi', 'tracks-end');
+                }
+            }
         });
 
         // --- GLOBAL STORE REACTIONS ---
@@ -230,6 +205,7 @@ export class StyleManager {
         map_: maplibregl.Map,
         traces
     ) {
+        console.log("updateTraceLayer called with traces:", traces);
         const lengths = traces.map(t => t.distance);
 
         const min = Math.min(...lengths);
@@ -265,8 +241,51 @@ export class StyleManager {
 
         });
     }
-    private addTracesLayer(map_: maplibregl.Map) {
 
+    private async updateTracesLayer(map_: maplibregl.Map) {
+        const res = await fetch('/api/traces');
+        const traces = await res.json();
+        const lengths = traces.map(t => t.distance);
+
+        const min = Math.min(...lengths);
+        const max = Math.max(...lengths);
+        const geojson = {
+            type: 'FeatureCollection',
+            features: traces.map((t: any) => ({
+                type: 'Feature',
+                properties: {
+                    name: t.name,
+                    distance: t.distance,
+                    lengthNorm: this.normalize(t.distance, min, max),
+                    done: t.done === true
+                },
+                geometry: {
+                    type: 'LineString',
+                    coordinates: t.coordinates
+                }
+            }))
+        };
+
+        const source = map_.getSource('traces') as maplibregl.GeoJSONSource;
+        source.setData(geojson);
+        const traceIndex = geojson.features.map((f: any) => ({
+            name: f.properties.name,
+            coordinates: f.geometry.coordinates,
+            done: f.properties.done,
+        }));
+        traceSearchIndex.set(traceIndex);
+        fileNamesMap.update((map) => {
+            const newMap: Record<string, any> = { ...map };
+            for (const t of traces) {
+                const id = crypto.randomUUID();
+                newMap[id] = {
+                    oldName: t.filename,
+                    currentName: t.embeddedName,
+                };
+            }
+            return newMap;
+        });
+        console.log(`filenames map updated:`, get(fileNamesMap));
 
     }
 
@@ -301,25 +320,6 @@ export class StyleManager {
         );
     }
 
-    async openTraceInEditor(name: string) {
-        const res = await fetch(`/api/traces/${name}`);
-        const trace = await res.json();
-
-        if (!trace.gpx) return;
-
-        const data = new TextEncoder().encode(trace.gpx);
-
-        const file = new File([data], trace.file ?? `${name}.gpx`, {
-            type: 'application/gpx+xml'
-        });
-
-        // 🔥 PIPELINE OFFICIEL
-        await loadFiles([file]);
-
-        // 👉 optionnel mais recommandé
-        selection.selectAll();
-    }
-
     private async loadGPXFromString(gpxText: string, filename: string) {
         const data = new TextEncoder().encode(gpxText);
 
@@ -341,7 +341,7 @@ export class StyleManager {
                 l.type === 'symbol' &&
                 (l.layout?.['text-field'] || l.layout?.['icon-image']) &&
                 !this._protectedLayers.has(l.id) &&
-                l.id !== 'summits-poi' &&
+                l.id !== 'natural-poi' &&
                 l.id !== 'refuges-poi' &&
                 l.id !== 'overpass'
             )
@@ -349,7 +349,6 @@ export class StyleManager {
     }
     private hideBasemapLabels(map_: maplibregl.Map) {
         if (this._labelsHidden) return;
-        console.log("hiding among:", this._basemapLabelLayerIds)
         this.cacheBasemapLabels(map_);
 
         for (const id of this._basemapLabelLayerIds) {
@@ -377,17 +376,37 @@ export class StyleManager {
 
     private handleBivouacClick(feature: maplibregl.MapGeoJSONFeature) {
         const p = feature.properties;
-        console.log(feature.properties);
+
+        function normalizeSources(sources: any): string[] {
+            if (!sources) return [];
+
+            // déjà array
+            if (Array.isArray(sources)) return sources;
+
+            // string JSON (TON CAS ACTUEL)
+            if (typeof sources === "string") {
+                try {
+                    const parsed = JSON.parse(sources);
+                    if (Array.isArray(parsed)) return parsed;
+                    return [sources];
+                } catch {
+                    // fallback si ce n’est pas du JSON valide
+                    return sources.split(",").map(s => s.trim());
+                }
+            }
+
+            return [];
+        }
+
         const data = {
             name: p?.nom,
             status: p?.bivouac,
             rule: p?.reglementation,
             quota: p?.quotas,
             reservable: p?.reservable,
-            description: p?.report
+            description: p?.report,
+            sources: normalizeSources(p?.sources)
         };
-
-        console.log("Bivouac clicked:", data);
 
         selectedFeature.set({
             type: 'bivouac',
@@ -421,8 +440,6 @@ export class StyleManager {
             link: props?.lien
         };
 
-        console.log("Refuge clicked:", base);
-
         // 1. état initial
         selectedFeature.set({
             type: 'refuge',
@@ -432,7 +449,7 @@ export class StyleManager {
 
         // 2. fetch async
         const details = await this.fetchPoiDetails(base.link);
-
+        details.photos = Array.from(new Set(details.photos ?? []));
         // 3. merge propre (sans reset global)
         selectedFeature.update(current => {
             if (!current || current.type !== 'refuge') return current;
@@ -443,6 +460,68 @@ export class StyleManager {
                 loading: false
             };
         });
+    }
+
+    private normalizePoiName(raw: string) {
+        if (!raw) return '';
+
+        return raw
+            .split('\n')[0]   // garde uniquement le nom
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    private async handleNaturalPoiClick(feature: maplibregl.MapGeoJSONFeature) {
+        const props = feature.properties;
+        const base = {
+            name: this.normalizePoiName(props?.nom),
+            type: props?.natural,
+            altitude: props?.ele ?? null,
+            coordinates: (feature.geometry as any)?.coordinates
+        };
+
+        // 1. état initial (instantané)
+        selectedFeature.set({
+            type: 'natural',
+            data: base,
+            loading: true
+        });
+
+        // 2. enrichissement async (images / wiki / commons)
+        const details = await this.fetchNaturalPoiDetails(base.name);
+
+        // 3. merge propre
+        selectedFeature.update(current => {
+            if (!current || current.type !== 'natural') return current;
+
+            return {
+                ...current,
+                details,
+                loading: false
+            };
+        });
+    }
+    async fetchNaturalPoiDetails(name: string) {
+        if (!name || typeof name !== 'string') {
+            return { images: [] };
+        }
+
+        const res = await fetch(
+            `https://commons.wikimedia.org/w/api.php?action=query&list=search&srnamespace=6&srsearch=${encodeURIComponent(name)}&srlimit=5&format=json&origin=*`
+        );
+
+        if (!res.ok) {
+            return { images: [] };
+        }
+        const data = await res.json();
+        const images =
+            data?.query?.search?.map((r: any) => {
+                const file = r.title?.replace("File:", "");
+                return file
+                    ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}`
+                    : null;
+            }).filter(Boolean) ?? [];
+        return { images };
     }
 
     async preloadIcons(map_: maplibregl.Map, features: any[]) {
@@ -838,3 +917,23 @@ export class StyleManager {
         };
     }
 }
+
+
+export async function openTraceInEditor(name: string) {
+        const res = await fetch(`/api/traces/${name}`);
+        const trace = await res.json();
+
+        if (!trace.gpx) return;
+
+        const data = new TextEncoder().encode(trace.gpx);
+
+        const file = new File([data], trace.file ?? `${name}.gpx`, {
+            type: 'application/gpx+xml'
+        });
+
+        // 🔥 PIPELINE OFFICIEL
+        await loadFiles([file]);
+
+        // 👉 optionnel mais recommandé
+        selection.selectAll();
+    }

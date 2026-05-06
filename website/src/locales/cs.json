@@ -19,6 +19,8 @@
         "cut": "Vyjmout",
         "mark_as_done": "Mark as Done",
         "mark_all_as_done": "Mark All as Done",
+        "save": "Save",
+        "save_all": "Save All",
         "export": "Exportovat...",
         "export_all": "Exportovat vše...",
         "export_options": "Možnosti exportu",
@@ -267,6 +269,12 @@
             "button": "Odstranit",
             "help": "Vyberte obdélníkovou oblast na mapě pro odstranění bodů GPS a bodů zájmu.",
             "help_no_selection": "Vyberte trasu pro vyčištění bodů GPS a bodů zájmu."
+        },
+        "collect": {
+            "tooltip": "Add waypoints based on points of interest",
+            "button": "Add Waypoints",
+            "help": "Select a rectangle area on the map to add waypoints from points of interest.",
+            "help_no_selection": "Select a trace to add waypoints from points of interest."
         }
     },
     "layers": {
@@ -314,12 +322,12 @@
             "openStreetMap": "OpenStreetMap",
             "openTopoMap": "OpenTopoMap",
             "openHikingMap": "OpenHikingMap",
-"snowMask": "Snow",
-"summits": "Summits",
-"refuges": "Refuges",
-"labels": "Labels",
-            "traces":"Public Hikes",
-            "bivouac":"Campsite Rules",
+            "snowMask": "Snow",
+            "summits": "Summits",
+            "refuges": "Refuges",
+            "labels": "Labels",
+            "traces": "Public Hikes",
+            "bivouac": "Campsite Rules",
             "cyclOSM": "CyclOSM",
             "utagawaVTT": "UtagawaMTB",
             "linz": "LINZ Topo",
@@ -438,6 +446,17 @@
         "heartrate": "bpm",
         "cadence": "ot/min",
         "power": "W"
+    },
+    "bivouac": {
+        "bookable": "Bookable",
+        "yes": "Yes",
+        "no": "No",
+        "rules": "Rules",
+        "close": "Close",
+        "unknown": "Unknown",
+        "restricted": "Restricted",
+        "allowed": "Allowed",
+        "forbidden": "Forbidden"
     },
     "gpx": {
         "file": "Soubor",

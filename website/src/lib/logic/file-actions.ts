@@ -14,6 +14,7 @@ import {
     sortItems,
     type ListItem,
 } from '$lib/components/file-list/file-list';
+import { map } from '$lib/components/map/map';
 import { i18n } from '$lib/i18n.svelte';
 import { freeze, type WritableDraft } from 'immer';
 import {
@@ -32,6 +33,7 @@ import { settings } from '$lib/logic/settings';
 import { getClosestLinePoint, getClosestTrackSegments, getElevation } from '$lib/utils';
 import { gpxStatistics } from '$lib/logic/statistics';
 import { boundsManager } from './bounds';
+import { kmlToGpx } from '../../routes/api/traces/convert';
 
 // Generate unique file ids, different from the ones in the database
 export function getFileIds(n: number) {
@@ -86,7 +88,7 @@ export function createFile() {
 export function triggerFileInput() {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.gpx';
+    input.accept = '.gpx,.kml';
     input.multiple = true;
     input.className = 'hidden';
     input.onchange = () => {
@@ -102,6 +104,7 @@ export async function loadFiles(list: FileList | File[]) {
     for (let i = 0; i < list.length; i++) {
         let file = await loadFile(list[i]);
         if (file) {
+
             files.push(file);
         }
     }
@@ -116,7 +119,12 @@ export async function loadFile(file: File): Promise<GPXFile | null> {
         const reader = new FileReader();
         reader.onload = () => {
             let data = reader.result?.toString() ?? null;
+            
             if (data) {
+                if (file.name.endsWith("kml")){
+                    console.log("kml should be converted")
+                    data = kmlToGpx(data)
+                }
                 let gpx = parseGPX(data);
                 if (gpx.metadata === undefined) {
                     gpx.metadata = {};
@@ -365,7 +373,7 @@ export const fileActions = {
                             if (point.trkpt.time !== undefined) {
                                 startTime = new Date(
                                     point.trkpt.time.getTime() -
-                                        (1000 * 3600 * point.distance.total) / speed
+                                    (1000 * 3600 * point.distance.total) / speed
                                 );
                                 break;
                             }
@@ -900,8 +908,72 @@ export const fileActions = {
             draft.clear();
         });
     },
+    collectWaypointsFromPOIs(bbox) {
+        const map_ = map.instance;
+        if (!map_) return;
+
+        const features = map_.queryRenderedFeatures(undefined, {
+            layers: ['refuges-poi']
+        });
+
+        const [min, max] = bbox;
+
+        const inside = features.filter(f => {
+            const [lon, lat] = (f.geometry as any).coordinates;
+
+            return (
+                lon >= min.lon &&
+                lon <= max.lon &&
+                lat >= min.lat &&
+                lat <= max.lat
+            );
+        });
+        const waypoints = inside.map(f => ({
+            attributes: {
+                lat: f.geometry.coordinates[1],
+                lon: f.geometry.coordinates[0],
+            },
+            name: f.properties?.nom ?? 'POI',
+            desc: undefined,
+            cmt: undefined,
+            sym: undefined,
+            ele: extractAltitude(f.properties)
+        }));
+        fileActions.addWaypointsToSelectedFiles(waypoints);
+    },
+    addWaypointsToSelectedFiles: (waypoints: WaypointType[]) => {
+        let fileIds = new Set<string>();
+
+        get(selection)
+            .getSelected()
+            .forEach((item) => fileIds.add(item.getFileId()));
+
+        fileActionManager.applyToFiles(Array.from(fileIds), (file) => {
+            const wpts = waypoints.map(w => new Waypoint(w));
+
+            file.replaceWaypoints(
+                file.wpt.length,
+                file.wpt.length,
+                wpts
+            );
+        });
+    }
 };
 
+
+function extractAltitude(properties: any): number | undefined {
+    try {
+        const coord = properties?.coord;
+        if (!coord) return undefined;
+
+        const parsed = typeof coord === 'string' ? JSON.parse(coord) : coord;
+
+        const alt = parsed?.alt;
+        return typeof alt === 'number' ? alt : undefined;
+    } catch {
+        return undefined;
+    }
+}
 export function pasteSelection() {
     let fromItems = get(copied);
     if (fromItems === undefined || fromItems.length === 0) {

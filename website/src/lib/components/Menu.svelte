@@ -46,6 +46,8 @@
         BookOpenText,
         ChartArea,
         Maximize,
+        Save,
+        Archive
     } from '@lucide/svelte';
     import { map } from '$lib/components/map/map';
     import { editMetadata } from '$lib/components/file-list/metadata/utils.svelte';
@@ -54,7 +56,9 @@
         exclude,
         exportState,
         ExportState,
+        saveAllFiles,
         saveAllFilesAsDone,
+        saveSelectedFiles,
         saveSelectedFilesAsDone,
     } from '$lib/components/export/utils.svelte';
     import { anySelectedLayer } from '$lib/components/map/layer-control/utils';
@@ -173,6 +177,9 @@
                     <Menubar.Separator />
                     <Menubar.Item
                         onclick={async () => {
+                            console.log('Marking selected files as done:', $exclude);
+                            console.log('ExportState.SELECTION', ExportState.SELECTION);
+                            console.log("selection store value:", get(selection));
                             // exportState.current = ExportState.SELECTION
                             await saveSelectedFilesAsDone($exclude);
                         }}
@@ -181,15 +188,29 @@
                         <SquareCheckBig size="16" />
                         {i18n._('menu.mark_as_done')}
                     </Menubar.Item>
+                    <Menubar.Separator />
                     <Menubar.Item
                         onclick={async () => {
+                            console.log('Marking selected files as done:', $exclude);
+                            console.log('ExportState.SELECTION', ExportState.SELECTION);
+                            console.log("selection store value:", get(selection));
                             // exportState.current = ExportState.SELECTION
-                            await saveAllFilesAsDone($exclude);
+                            await saveSelectedFiles($exclude);
                         }}
                         disabled={$selection.size == 0}
                     >
-                        <SquareCheckBig size="16" />
-                        {i18n._('menu.mark_all_as_done')}
+                        <Save size="16" />
+                        {i18n._('menu.save')}
+                    </Menubar.Item>
+                    <Menubar.Item
+                        onclick={async () => {
+                            // exportState.current = ExportState.SELECTION
+                            await saveAllFiles($exclude);
+                        }}
+                        disabled={$selection.size == 0}
+                    >
+                        <Archive size="16" />
+                        {i18n._('menu.save_all')}
                     </Menubar.Item>
                     <Menubar.Separator />
                     <Menubar.Item

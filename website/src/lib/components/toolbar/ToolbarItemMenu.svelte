@@ -13,6 +13,7 @@
     import RoutingControlPopup from '$lib/components/toolbar/tools/routing/RoutingControlPopup.svelte';
     import maplibregl from 'maplibre-gl';
     import { settings } from '$lib/logic/settings';
+    import Collect from './tools/Collect.svelte';
 
     let {
         class: className = '',
@@ -60,6 +61,8 @@
                         <Extract />
                     {:else if $currentTool === Tool.CLEAN}
                         <Clean />
+                    {:else if $currentTool === Tool.COLLECT}
+                        <Collect />
                     {:else if $currentTool === Tool.REDUCE}
                         <Reduce />
                     {/if}

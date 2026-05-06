@@ -7,6 +7,9 @@ import JSZip from 'jszip';
 import { get } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 import { map } from '../map/map';
+import { fileNamesMap } from '$lib/logic/fileNames';
+import maplibregl from 'maplibre-gl';
+import { fetchFilteredTracesApi, updateTraceLayer } from '../filter/utils.svelte';
 
 export const exportOptions = writable({
     time: true,
@@ -56,6 +59,22 @@ export async function exportSelectedFiles(exclude: string[]) {
 
 export async function exportAllFiles(exclude: string[]) {
     await exportFiles(get(settings.fileOrder), exclude);
+}
+
+
+export async function saveSelectedFiles(exclude: string[]) {
+    const fileIds: string[] = [];
+
+    selection.applyToOrderedSelectedItemsFromFile((fileId) => {
+        fileIds.push(fileId);
+    });
+
+    await saveFiles(fileIds, exclude);
+}
+
+export async function saveAllFiles(exclude: string[]) {
+    const fileIds = get(settings.fileOrder);
+    await saveFiles(fileIds, exclude);
 }
 
 function exportFile(file: GPXFile, exclude: string[]) {
@@ -190,14 +209,25 @@ async function saveFiles(fileIds: string[], exclude: string[]) {
 
     const filesPayload = files.map(file => ({
         name: file.metadata.name || "trace",
-        gpx: buildCachedGPX(file, exclude)
+        gpx: buildGPX(file, exclude)
     }));
-
-    await fetch('/api/save-trace', {
+    try {
+        const fileNamesMapInstance = get(fileNamesMap)
+    const res =  await fetch('/api/save-trace', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: filesPayload })
+        body: JSON.stringify({ files: filesPayload, fileNamesMap: fileNamesMapInstance })
     });
+    const data = await res.json();
+    fileNamesMap.set(data.fileNamesMap);
+    console.log("Files saved successfully:", data);
+    } catch (error) {
+        console.log("Error saving files:", error);
+    }
+
+    
+    const traces = await fetchFilteredTracesApi({})
+    await updateTraceLayer(traces);
 }
 
 function buildCachedGPX(file: GPXFile, exclude: string[]) {
@@ -215,19 +245,4 @@ function buildCachedGPX(file: GPXFile, exclude: string[]) {
     gpxCache.set(key, gpx);
 
     return gpx;
-}
-
-export async function saveSelectedFiles(exclude: string[]) {
-    const fileIds: string[] = [];
-
-    selection.applyToOrderedSelectedItemsFromFile((fileId) => {
-        fileIds.push(fileId);
-    });
-
-    await saveFiles(fileIds, exclude);
-}
-
-export async function saveAllFiles(exclude: string[]) {
-    const fileIds = get(settings.fileOrder);
-    await saveFiles(fileIds, exclude);
 }

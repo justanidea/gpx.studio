@@ -10,6 +10,7 @@
     import { i18n } from '$lib/i18n.svelte';
     import { editMetadata } from '$lib/components/file-list/metadata/utils.svelte';
     import { fileActionManager } from '$lib/logic/file-action-manager';
+    import { fileNamesMap } from '$lib/logic/fileNames';
 
     let {
         node,
@@ -53,7 +54,14 @@
         <Button
             variant="outline"
             onclick={() => {
+                let currentFileNamesMap = $fileNamesMap
+                console.log(`current filenames map:`, currentFileNamesMap);
+                let oldName = '';
+                let newName = '';
                 fileActionManager.applyToFile(item.getFileId(), (file) => {
+                    console.log('initial embedded name:', file.metadata.name, 'new name:', name );
+                    oldName = file.metadata.name ?? '';
+                    newName = name;
                     if (item instanceof ListFileItem && node instanceof GPXFile) {
                         file.metadata.name = name;
                         file.metadata.desc = description;
@@ -65,7 +73,19 @@
                         file.trk[item.getTrackIndex()].desc = description;
                     }
                 });
+
                 open = false;
+                console.log(`Metadata updated for file ${item.getFileId()}: old name="${oldName}", new name="${newName}"`);
+                for (const fileNameState of Object.values(currentFileNamesMap)) {
+                    if (fileNameState.currentName === oldName) {
+                        fileNameState.currentName = newName;
+                        console.log(`current filenames map (updated):`, currentFileNamesMap);
+                        console.log("$fileNamesMap", $fileNamesMap)
+                        return
+                    }
+                }
+               
+                
             }}
         >
             <Save size="16" />

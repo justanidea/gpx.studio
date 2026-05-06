@@ -2,9 +2,10 @@
     import { Dialog } from 'bits-ui';
     import { Button } from '$lib/components/ui/button';
     import { filterState } from './utils.svelte';
+    import { fetchFilteredTracesApi } from './utils.svelte';
 
     import { get } from 'svelte/store';
-    import { map } from '$lib/components/map/map'; // adapte si ton store map diffère
+    import { map } from '$lib/components/map/map';
 
     let open = false;
     let distanceMin: string | number = '';
@@ -57,34 +58,22 @@
         }
     }
 
-    async function fetchFilteredTraces() {
-        const res = await fetch('/api/traces/filter', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                distanceMin: distanceMin === '' ? null : Number(distanceMin),
-                distanceMax: distanceMax === '' ? null : Number(distanceMax),
-
-                ascentMin: ascentMin === '' ? null : Number(ascentMin),
-                ascentMax: ascentMax === '' ? null : Number(ascentMax),
-                maxAltitude: maxAltitude === '' ? null : Number(maxAltitude),
-                estimatedDays: estimatedDays === '' ? null : Number(estimatedDays),
-            }),
+    
+    export async function fetchFilteredTraces() {
+        const traces = await fetchFilteredTracesApi({
+            distanceMin: distanceMin === '' ? null : Number(distanceMin),
+            distanceMax: distanceMax === '' ? null : Number(distanceMax),
+            ascentMin: ascentMin === '' ? null : Number(ascentMin),
+            ascentMax: ascentMax === '' ? null : Number(ascentMax),
+            maxAltitude: maxAltitude === '' ? null : Number(maxAltitude),
+            estimatedDays: estimatedDays === '' ? null : Number(estimatedDays),
         });
 
-        if (!res.ok) {
-            console.error('Filter request failed');
-            return;
-        }
-
-        const traces = await res.json();
-
         const map_ = get(map);
-        const sm = map.styleManager;
-        if (!sm) return;
-        if (!map_) return;
+        const sm = map_?.styleManager;
+
+        if (!map_ || !sm) return;
+
         sm.updateTraceLayer(map_, traces);
     }
 

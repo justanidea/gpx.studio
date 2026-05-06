@@ -1952,7 +1952,9 @@ async function loadFileTrace(file: string) {
         maxAltitude: maxAltitude,
         ascent: ascent,
         estimatedDays: estimatedDays,
-        done: doneState
+        done: doneState,
+        filename: file,
+        embeddedName: gpxFile.metadata?.name,
     };
     console.log(`Loaded trace ${file}: distance=${distance.toFixed(2)}km, ascent=${ascent}m, estimatedDays=${estimatedDays}, done=${JSON.stringify(gpxFile.extensions?.done)}`);
     fileCache.set(file, trace);

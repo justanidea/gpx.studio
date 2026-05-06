@@ -19,6 +19,8 @@
         "cut": "Couper",
         "mark_as_done": "Mark as Done",
         "mark_all_as_done": "Mark All as Done",
+        "save": "Save",
+        "save_all": "Save All",
         "export": "Exporter...",
         "export_all": "Exporter tout...",
         "export_options": "Options d'exportation",
@@ -26,7 +28,7 @@
         "support_button": "Enregistrer sur le serveur",
         "download_file": "Télécharger le fichier",
         "download_files": "Télécharger les fichiers",
-        "filter_traces":"Filtrer les traces",
+        "filter_traces": "Filtrer les traces",
         "edit": "Édition",
         "undo": "Annuler",
         "redo": "Rétablir",
@@ -268,6 +270,12 @@
             "button": "Supprimer",
             "help": "Sélectionnez une zone rectangulaire sur la carte pour supprimer les points GPS et les points d'intérêt.",
             "help_no_selection": "Sélectionnez une trace pour supprimer les points GPS et les points d'intérêt."
+        },
+        "collect": {
+            "tooltip": "Add waypoints based on points of interest",
+            "button": "Add Waypoints",
+            "help": "Select a rectangle area on the map to add waypoints from points of interest.",
+            "help_no_selection": "Select a trace to add waypoints from points of interest."
         }
     },
     "layers": {
@@ -319,8 +327,8 @@
             "summits": "Sommets",
             "refuges": "Refuges Info",
             "labels": "Nom des Lieux",
-            "traces":"Randonnées Publiques",
-            "bivouac":"Restrictions de bivouac",
+            "traces": "Randonnées Publiques",
+            "bivouac": "Restrictions de bivouac",
             "cyclOSM": "CyclOSM",
             "utagawaVTT": "UtagawaVTT",
             "linz": "LINZ Topo",
@@ -439,6 +447,17 @@
         "heartrate": "bpm",
         "cadence": "rpm",
         "power": "W"
+    },
+    "bivouac": {
+        "bookable": "Réservable",
+        "yes": "Oui",
+        "no": "Non",
+        "rules": "Règles",
+        "close": "Fermer",
+        "unknown": "Inconnu",
+        "restricted": "Restreint",
+        "allowed": "Autorisé",
+        "forbidden": "Interdit"
     },
     "gpx": {
         "file": "Fichier",

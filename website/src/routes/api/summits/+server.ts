@@ -3,7 +3,6 @@ import { json } from '@sveltejs/kit';
 export async function GET({ url }) {
 
     const bbox = url.searchParams.get('bbox');
-    // console.debug("overpass request", bbox)
     if (!bbox) {
         return json(
             { error: 'bbox required' },
@@ -55,7 +54,6 @@ out center tags;`;
                 })
             }
         );
-        // console.debug("response", response.status)
         const body = new URLSearchParams({ data: query });
 
 

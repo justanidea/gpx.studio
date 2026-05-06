@@ -6,11 +6,33 @@ import { kmlToGpx } from '../traces/convert';
 
 const SAVE_DIR = path.join(process.cwd(), 'savedTraces');
 
+/* ---------------- NORMALISATION ---------------- */
+
+type FileNameState = {
+    oldName: string;
+    currentName: string;
+};
+
+const fileResults: {
+    oldName: string;
+    newName: string;
+}[] = [];
+
+const decodeHtmlEntities = (str: string) => {
+    return str
+        .replace(/&apos;/g, "'")
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">");
+};
+
 function normalizeName(name: string) {
-    return String(name || 'trace')
+    return decodeHtmlEntities(String(name || 'trace'))
         .toLowerCase()
-        .replace(/[\/\\:*?"<>|]/g, '')
+        .replace(/[\/\\:*?"<>|']/g, '')
         .replace(/[\s_-]+/g, '')
+        .replace(/\.(gpx|kml)$/, '')
         .normalize('NFKD');
 }
 
@@ -22,6 +44,8 @@ function buildKeys(...names: (string | undefined)[]) {
     return names.filter(isDefined).map(normalizeName);
 }
 
+/* ---------------- EXTRACT ---------------- */
+
 function extractKmlName(xml: string): string | undefined {
     const match =
         xml.match(/<name><!\[CDATA\[(.*?)\]\]><\/name>/i) ||
@@ -30,8 +54,22 @@ function extractKmlName(xml: string): string | undefined {
     return match?.[1]?.trim();
 }
 
+function extractGPXName(xml: string): string | undefined {
+    const match = xml.match(/<name>(.*?)<\/name>/i);
+    return match?.[1]?.trim();
+}
+
+/* ---------------- API ---------------- */
+
 export async function POST({ request }) {
-    const { files } = await request.json();
+    const body = (await request.json()) as {
+        files: any[];
+        fileNamesMap: Record<string, FileNameState>;
+    };
+
+    const { files, fileNamesMap } = body;
+    let targetFile = '';
+    console.log('Received fileNamesMap:', fileNamesMap);
     if (!Array.isArray(files)) {
         return json({ error: 'Invalid payload' }, { status: 400 });
     }
@@ -39,68 +77,118 @@ export async function POST({ request }) {
     await fs.mkdir(SAVE_DIR, { recursive: true });
 
     const existingFiles = await fs.readdir(SAVE_DIR);
-
     const existingIndex = await buildExistingIndex(existingFiles);
 
     const deletions = new Set<string>();
-
-    // 🧠 track files being written in this request (VERY IMPORTANT)
     const writingFiles = new Set<string>();
 
+    /* =========================================================
+       🔥 1. BUILD FAST LOOKUP FROM FRONTEND STATE
+    ========================================================= */
+
+    const uiMap = new Map<
+        string,
+        { old: string; current: string }
+    >();
+
+    for (const state of Object.values(fileNamesMap || {})) {
+        uiMap.set(normalizeName(state.currentName), {
+            old: normalizeName(state.oldName),
+            current: normalizeName(state.currentName)
+        });
+    }
+
+    /* =========================================================
+       🔥 2. PROCESS FILES
+    ========================================================= */
+
     const writeOps = files.map(async (file) => {
-        const safeName = String(file.name || 'trace')
-            .replace(/[\/\\:*?"<>|]/g, '_');
+        const safeName = normalizeName(file.name.replace(/\.(gpx|kml)$/, ''));
 
         const gpxFile = parseGPX(file.gpx);
         const kmlName = extractKmlName(file.gpx);
 
+        /* ---------------- UI CONTEXT ---------------- */
+
+        const uiState = uiMap.get(safeName);
+
+        const uiOldName = uiState?.old;
+        const uiCurrentName = uiState?.current;
+
+        /* ---------------- BUILD MATCH KEYS ---------------- */
+
         const keys = buildKeys(
             gpxFile.metadata?.name,
             kmlName,
-            safeName
+            safeName,
+            uiOldName,
+            uiCurrentName
         );
 
-        const targetFile = `${safeName}.gpx`;
+        console.log('Processing:', file.name, 'keys:', keys);
+
+        let targetFile = `${safeName}.gpx`;
+        console.log("saving as", targetFile)
+        fileResults.push({
+            oldName: file.name,
+            newName: targetFile
+        });
         writingFiles.add(targetFile);
 
-        // 🧠 collect candidates for deletion
+        /* ---------------- DELETE MATCHING FILES ---------------- */
+
         for (const key of keys) {
             const existing = existingIndex.get(key);
             if (!existing) continue;
 
             for (const f of existing) {
-                // ❌ NEVER delete file we are about to write
-                if (f === targetFile) continue;
+                const normalizedF = normalizeName(f);
+
+                // ne pas delete ce qu'on réécrit
+                if (normalizedF === safeName) continue;
 
                 deletions.add(f);
             }
         }
 
-        const gpxPath = path.join(SAVE_DIR, targetFile);
+        /* ---------------- WRITE FILE ---------------- */
 
+        const gpxPath = path.join(SAVE_DIR, targetFile);
         await fs.writeFile(gpxPath, file.gpx, 'utf-8');
     });
 
     await Promise.all(writeOps);
 
-    // 🧠 final safety filter BEFORE deleting
-    const finalDeletions = Array.from(deletions).filter(f => {
-        return !writingFiles.has(f);
-    });
+    /* =========================================================
+       🔥 3. FINAL SAFE DELETE
+    ========================================================= */
 
-    await Promise.all(
-        finalDeletions.map((f) =>
-            fs.unlink(path.join(SAVE_DIR, f)).catch(() => {})
-        )
+    const finalDeletions = Array.from(deletions).filter(
+        f => !writingFiles.has(f)
     );
 
-    return json({ ok: true });
+    console.log('Deleting files:', finalDeletions);
+
+    await Promise.all(
+      finalDeletions.map(f =>
+        fs.unlink(path.join(SAVE_DIR, f)).catch(() => {})
+      )
+    );
+    for (const result of fileResults) {
+        for (const state of Object.values(fileNamesMap)) {
+            console.log(`Comparing ${state.oldName} with ${result.oldName}`);
+            if (normalizeName(state.currentName) === normalizeName(result.oldName)) {
+                state.oldName = result.newName;
+                console.log(`Updated fileNamesMap for ${result.oldName}:`, state);
+            }
+        }
+    }
+    return json({ ok: true, fileNamesMap: fileNamesMap });
 }
 
-function extractGPXName(xml: string): string | undefined {
-    const match = xml.match(/<name>(.*?)<\/name>/i);
-    return match?.[1]?.trim();
-}
+/* =========================================================
+   INDEX BUILD
+========================================================= */
 
 async function buildExistingIndex(existingFiles: string[]) {
     const index = new Map<string, string[]>();
@@ -122,8 +210,7 @@ async function buildExistingIndex(existingFiles: string[]) {
 
             let gpxName: string | undefined;
             try {
-                const gpxFile = extractGPXName(gpxContent);
-                gpxName = gpxFile.metadata?.name;
+                gpxName = extractGPXName(gpxContent);
             } catch { }
 
             const keys = buildKeys(

@@ -1,32 +1,32 @@
 import {
-    TramFront,
-    Utensils,
-    ShoppingBasket,
-    Droplet,
-    ShowerHead,
-    Fuel,
+    Bed,
+    Binoculars,
+    Bus,
     CircleParking,
+    Croissant,
+    Droplet,
     Fence,
     FerrisWheel,
-    Bed,
+    Fuel,
+    House,
     Mountain,
     Pickaxe,
-    Store,
-    TrainFront,
-    Bus,
     Ship,
-    Croissant,
-    House,
+    ShoppingBasket,
+    ShowerHead,
+    Store,
     Tent,
-    Wrench,
-    Binoculars,
     Toilet,
+    TrainFront,
+    TramFront,
+    Utensils,
+    Wrench,
 } from 'lucide-static';
 import { type RasterDEMSourceSpecification, type StyleSpecification } from 'maplibre-gl';
-import ignFrTopo from './custom/ign-fr-topo.json';
+import bikerouterGravel from './custom/bikerouter-gravel.json';
 import ignFrPlan from './custom/ign-fr-plan.json';
 import ignFrSatellite from './custom/ign-fr-satellite.json';
-import bikerouterGravel from './custom/bikerouter-gravel.json';
+import ignFrTopo from './custom/ign-fr-topo.json';
 
 export const maptilerKeyPlaceHolder = 'MAPTILER_KEY';
 
@@ -452,7 +452,7 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
         },
         layers: [
             {
-                id: "summits-poi",
+                id: "natural-poi",
                 type: "symbol",
                 source: "summits",
                 minzoom: 12,
@@ -546,9 +546,9 @@ export const overlays: { [key: string]: string | StyleSpecification } = {
                     "fill-color": [
                         "match",
                         ["get", "bivouac"],
-                        "Toléré", "#22c55e",
-                        "Déconseillé", "#f59e0b",
-                        "Interdit", "#ef4444",
+                        "allowed", "#22c55e",
+                        "restricted", "#f59e0b",
+                        "forbidden", "#ef4444",
                         "#3b82f6"
                     ],
                     "fill-opacity": 0.25
@@ -1120,7 +1120,6 @@ export const overpassTree: LayerTreeType = {
         amenities: {
             toilets: true,
             water: true,
-            lakes: true,
             shower: true,
             shelter: true,
             barrier: true,
@@ -1217,7 +1216,6 @@ export const defaultOverpassQueries: LayerTreeType = {
             toilets: false,
             water: false,
             shower: false,
-            lakes: false,
             shelter: false,
             barrier: false,
             cemetery: false,
@@ -1369,7 +1367,6 @@ export const defaultOverpassTree: LayerTreeType = {
         amenities: {
             toilets: true,
             water: true,
-            lakes: true,
             shower: false,
             shelter: false,
             barrier: false,
@@ -1727,24 +1724,7 @@ export const overpassQueryData: Record<string, OverpassQueryData> = {
             amenity: 'ferry_terminal',
         },
         symbol: 'Anchor',
-    },
-    lakes: {
-        icon: {
-            svg: Droplet,
-            color: 'DeepSkyBlue',
-        },
-        tags: [
-            {
-                natural: 'water',
-                water: ['lake', 'reservoir'],
-            },
-            {
-                natural: 'water',
-                name: '*', // fallback pour les lacs mal tagués
-            },
-        ],
-        symbol: 'Lake',
-    },
+    }
 };
 
 export const terrainSources: { [key: string]: RasterDEMSourceSpecification } = {

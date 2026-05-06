@@ -7,8 +7,9 @@ import '@maplibre/maplibre-gl-geocoder/dist/maplibre-gl-geocoder.css';
 import { get, writable, type Writable } from 'svelte/store';
 import { settings } from '$lib/logic/settings';
 import { tick } from 'svelte';
-import { ANCHOR_LAYER_KEY, StyleManager } from '$lib/components/map/style';
+import { ANCHOR_LAYER_KEY, openTraceInEditor, StyleManager } from '$lib/components/map/style';
 import { MapLayerEventManager } from '$lib/components/map/map-layer-event-manager';
+import { traceSearchIndex } from '$lib/logic/traceSearchIndex';
 
 const { treeFileView, elevationProfile, bottomPanelSize, rightPanelSize, distanceUnits } = settings;
 
@@ -63,42 +64,85 @@ export class MapLibreGLMap {
                 visualizePitch: true,
             })
         );
-        if (geocoder) {
-            let geocoder = new MaplibreGeocoder(
-                {
-                    forwardGeocode: async (config) => {
-                        const results: MaplibreGeocoderFeatureResults = {
-                            features: [],
-                            type: 'FeatureCollection',
-                        };
-                        try {
-                            const request = `https://nominatim.openstreetmap.org/search?format=json&q=${config.query}&limit=5&accept-language=${language}`;
-                            const response = await fetch(request);
-                            const geojson = await response.json();
-                            results.features = geojson.map((result: any) => {
-                                return {
-                                    type: 'Feature',
-                                    geometry: {
-                                        type: 'Point',
-                                        coordinates: [result.lon, result.lat],
-                                    },
-                                    place_name: result.display_name,
-                                };
-                            });
-                        } catch (e) { }
-                        return results;
-                    },
-                },
-                {
-                    maplibregl: maplibregl,
-                    enableEventLogging: false,
-                    collapsed: true,
-                    flyTo: fitBoundsOptions,
-                    language,
-                }
-            );
-            map.addControl(geocoder);
+
+if (geocoder) {
+    
+    const geocoderControl = new MaplibreGeocoder(
+        {
+            forwardGeocode: async (config) => {
+                const results: MaplibreGeocoderFeatureResults = {
+                    features: [],
+                    type: 'FeatureCollection',
+                };
+
+                try {
+                    const request = `https://nominatim.openstreetmap.org/search?format=json&q=${config.query}&limit=5&accept-language=${language}`;
+                    const response = await fetch(request);
+                    const geojson = await response.json();
+
+                    
+                
+
+                const traces = get(traceSearchIndex);
+                const q = config.query.toLowerCase();
+
+                const matches = traces
+                    .filter(t => t.name?.toLowerCase().includes(q))
+                    .map(t => ({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: t.coordinates[0]
+                        },
+                        place_name: `🧭 ${t.name}`,
+                        properties: {
+                            type: 'trace'
+                        }
+                    }));
+                results.features.push(...matches);
+                results.features.push(
+                    ...geojson.map((result: any) => ({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [result.lon, result.lat],
+                        },
+                        place_name: result.display_name,
+                    }))
+                );
+                } catch (e) {}
+                return results;
+            },
+        },
+        {
+            maplibregl,
+            enableEventLogging: false,
+            collapsed: false,
+            flyTo: fitBoundsOptions,
+            language,
         }
+    );
+    geocoderControl.on('result', async (e) => {
+    const feature = e.result;
+    console.log(e.result)
+    if (feature?.properties?.type === 'trace') {
+        const name = feature.properties.name;
+
+        await openTraceInEditor(feature.place_name.replace('🧭 ', ''));
+        return;
+    }
+
+    // 🌍 comportement normal pour lieux
+    if (feature?.geometry?.coordinates) {
+        map.flyTo({
+            center: feature.geometry.coordinates,
+            zoom: 14
+        });
+    }
+});
+
+    map.addControl(geocoderControl);
+}
         if (geolocate) {
             map.addControl(
                 new maplibregl.GeolocateControl({
@@ -177,14 +221,22 @@ export class MapLibreGLMap {
         }
     }
 
-    get styleManager() {
+    public get styleManager() {
         return this._styleManager;
+    }
+
+    public get map(): maplibregl.Map | null {
+        return this._map;
     }
 
     get instance() {
         return this._map;
     }
+
 }
 
 export const map = new MapLibreGLMap();
+export function getStyleManager() {
+    return map.styleManager;
+}
 
