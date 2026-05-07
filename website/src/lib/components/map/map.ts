@@ -94,7 +94,7 @@ if (geocoder) {
                             type: 'Point',
                             coordinates: t.coordinates[0]
                         },
-                        place_name: `🧭 ${t.name}`,
+                        place_name: `⛰️ ${t.name}`,
                         properties: {
                             type: 'trace'
                         }
@@ -117,7 +117,7 @@ if (geocoder) {
         {
             maplibregl,
             enableEventLogging: false,
-            collapsed: false,
+            collapsed: true,
             flyTo: fitBoundsOptions,
             language,
         }
@@ -128,7 +128,7 @@ if (geocoder) {
     if (feature?.properties?.type === 'trace') {
         const name = feature.properties.name;
 
-        await openTraceInEditor(feature.place_name.replace('🧭 ', ''));
+        await openTraceInEditor(feature.place_name.replace('⛰️ ', ''));
         return;
     }
 

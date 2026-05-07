@@ -17,10 +17,10 @@
         "copy": "Copier",
         "paste": "Coller",
         "cut": "Couper",
-        "mark_as_done": "Mark as Done",
-        "mark_all_as_done": "Mark All as Done",
-        "save": "Save",
-        "save_all": "Save All",
+        "mark_as_done": "Marquer comme fait",
+        "mark_all_as_done": "Tout marquer comme fait",
+        "save": "Enregistrer",
+        "save_all": "Tout Enregistrer",
         "export": "Exporter...",
         "export_all": "Exporter tout...",
         "export_options": "Options d'exportation",
@@ -86,7 +86,8 @@
         "center": "Centrer",
         "open_in": "Ouvrir avec",
         "copy_coordinates": "Copier les coordonnées",
-        "edit_osm": "Éditer dans OpenStreetMap"
+        "edit_osm": "Voir la météo sur Ventusky",
+        "open_in_maps": "Ouvrir dans Google Maps"
     },
     "toolbar": {
         "routing": {

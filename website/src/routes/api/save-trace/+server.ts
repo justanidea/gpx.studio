@@ -69,7 +69,7 @@ export async function POST({ request }) {
 
     const { files, fileNamesMap } = body;
     let targetFile = '';
-    console.log('Received fileNamesMap:', fileNamesMap);
+    // console.log('Received fileNamesMap:', fileNamesMap);
     if (!Array.isArray(files)) {
         return json({ error: 'Invalid payload' }, { status: 400 });
     }
@@ -125,10 +125,10 @@ export async function POST({ request }) {
             uiCurrentName
         );
 
-        console.log('Processing:', file.name, 'keys:', keys);
+        // console.log('Processing:', file.name, 'keys:', keys);
 
         let targetFile = `${safeName}.gpx`;
-        console.log("saving as", targetFile)
+        // console.log("saving as", targetFile)
         fileResults.push({
             oldName: file.name,
             newName: targetFile
@@ -167,7 +167,7 @@ export async function POST({ request }) {
         f => !writingFiles.has(f)
     );
 
-    console.log('Deleting files:', finalDeletions);
+    // console.log('Deleting files:', finalDeletions);
 
     await Promise.all(
       finalDeletions.map(f =>
@@ -176,10 +176,10 @@ export async function POST({ request }) {
     );
     for (const result of fileResults) {
         for (const state of Object.values(fileNamesMap)) {
-            console.log(`Comparing ${state.oldName} with ${result.oldName}`);
+            // console.log(`Comparing ${state.oldName} with ${result.oldName}`);
             if (normalizeName(state.currentName) === normalizeName(result.oldName)) {
                 state.oldName = result.newName;
-                console.log(`Updated fileNamesMap for ${result.oldName}:`, state);
+                // console.log(`Updated fileNamesMap for ${result.oldName}:`, state);
             }
         }
     }

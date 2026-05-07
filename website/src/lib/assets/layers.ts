@@ -1165,10 +1165,10 @@ export const defaultOverlays: LayerTreeType = {
             important: {
                 snowMask: false,
                 labels: true,
-                summits: false,
-                refuges: false,
+                summits: true,
+                refuges: true,
                 bivouac: false,
-                traces: false,
+                traces: true,
             },
             waymarked_trails: {
                 waymarkedTrailsHiking: false,
@@ -1259,7 +1259,7 @@ export const defaultBasemapTree: LayerTreeType = {
             maptilerOutdoors: false,
             maptilerSatellite: true,
             maptilerDarkMatter: true,
-            esriSatellite: false,
+            esriSatellite: true,
             openStreetMap: true,
             openTopoMap: false,
             openHikingMap: true,
@@ -1280,7 +1280,7 @@ export const defaultBasemapTree: LayerTreeType = {
                 ignFrPlan: false,
                 ignFrTopo: false,
                 ignFrScan25: false,
-                ignFrSatellite: false,
+                ignFrSatellite: true,
             },
             new_zealand: {
                 linz: false,

@@ -5,7 +5,7 @@
     import { fetchFilteredTracesApi } from './utils.svelte';
 
     import { get } from 'svelte/store';
-    import { map } from '$lib/components/map/map';
+    import { getStyleManager, map } from '$lib/components/map/map';
 
     let open = false;
     let distanceMin: string | number = '';
@@ -70,8 +70,8 @@
         });
 
         const map_ = get(map);
-        const sm = map_?.styleManager;
-
+        const sm = getStyleManager()
+        console.log("map_ and sm:", map_, sm)
         if (!map_ || !sm) return;
 
         sm.updateTraceLayer(map_, traces);

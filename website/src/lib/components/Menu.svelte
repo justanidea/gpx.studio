@@ -47,7 +47,7 @@
         ChartArea,
         Maximize,
         Save,
-        Archive
+        Archive,
     } from '@lucide/svelte';
     import { map } from '$lib/components/map/map';
     import { editMetadata } from '$lib/components/file-list/metadata/utils.svelte';
@@ -106,7 +106,7 @@
 
     const canUndo = fileActionManager.canUndo;
     const canRedo = fileActionManager.canRedo;
-    console.log("selection store value:", get(selection));
+    // console.log('selection store value:', get(selection));
     function switchBasemaps() {
         [$currentBasemap, $previousBasemap] = [$previousBasemap, $currentBasemap];
     }
@@ -177,9 +177,9 @@
                     <Menubar.Separator />
                     <Menubar.Item
                         onclick={async () => {
-                            console.log('Marking selected files as done:', $exclude);
-                            console.log('ExportState.SELECTION', ExportState.SELECTION);
-                            console.log("selection store value:", get(selection));
+                            // console.log('Marking selected files as done:', $exclude);
+                            // console.log('ExportState.SELECTION', ExportState.SELECTION);
+                            // console.log('selection store value:', get(selection));
                             // exportState.current = ExportState.SELECTION
                             await saveSelectedFilesAsDone($exclude);
                         }}
@@ -191,9 +191,9 @@
                     <Menubar.Separator />
                     <Menubar.Item
                         onclick={async () => {
-                            console.log('Marking selected files as done:', $exclude);
-                            console.log('ExportState.SELECTION', ExportState.SELECTION);
-                            console.log("selection store value:", get(selection));
+                            // console.log('Marking selected files as done:', $exclude);
+                            // console.log('ExportState.SELECTION', ExportState.SELECTION);
+                            // console.log('selection store value:', get(selection));
                             // exportState.current = ExportState.SELECTION
                             await saveSelectedFiles($exclude);
                         }}
@@ -201,6 +201,7 @@
                     >
                         <Save size="16" />
                         {i18n._('menu.save')}
+                        <Shortcut key="S" alt={true} />
                     </Menubar.Item>
                     <Menubar.Item
                         onclick={async () => {
@@ -211,6 +212,7 @@
                     >
                         <Archive size="16" />
                         {i18n._('menu.save_all')}
+                        <Shortcut key="S" alt={true} shift={true} />
                     </Menubar.Item>
                     <Menubar.Separator />
                     <Menubar.Item
@@ -219,7 +221,7 @@
                     >
                         <Download size="16" />
                         {i18n._('menu.export')}
-                        <Shortcut key="S" ctrl={true} />
+                        <Shortcut key="S" ctrl={true} shift={false} />
                     </Menubar.Item>
                     <Menubar.Item
                         onclick={() => (exportState.current = ExportState.ALL)}
@@ -599,7 +601,7 @@
 <FilterDialog />
 
 <svelte:window
-    on:keydown={(e) => {
+    on:keydown={async (e) => {
         let targetInput =
             e &&
             e.target &&
@@ -645,6 +647,15 @@
                 }
             } else if ($selection.size > 0) {
                 exportState.current = ExportState.SELECTION;
+            }
+            e.preventDefault();
+        } else if ((e.key === 's' || e.key == 'S') && e.altKey) {
+            if (e.shiftKey) {
+                if (fileStateCollection.size > 0) {
+                    await saveAllFiles($exclude);
+                }
+            } else if ($selection.size > 0) {
+                await saveSelectedFiles($exclude);
             }
             e.preventDefault();
         } else if ((e.key === 'z' || e.key == 'Z') && (e.metaKey || e.ctrlKey)) {

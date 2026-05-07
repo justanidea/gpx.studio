@@ -39,7 +39,7 @@ const filters = {
     return true;
 
 });
-
+    console.log("returning", traces.length, "traces.")
     return json(traces);
 
 }

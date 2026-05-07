@@ -34,6 +34,7 @@ import { getClosestLinePoint, getClosestTrackSegments, getElevation } from '$lib
 import { gpxStatistics } from '$lib/logic/statistics';
 import { boundsManager } from './bounds';
 import { kmlToGpx } from '../../routes/api/traces/convert';
+import { fileNamesMap } from './fileNames';
 
 // Generate unique file ids, different from the ones in the database
 export function getFileIds(n: number) {
@@ -116,6 +117,7 @@ export async function loadFiles(list: FileList | File[]) {
 
 export async function loadFile(file: File): Promise<GPXFile | null> {
     let result = await new Promise<GPXFile | null>((resolve) => {
+        
         const reader = new FileReader();
         reader.onload = () => {
             let data = reader.result?.toString() ?? null;
@@ -139,6 +141,17 @@ export async function loadFile(file: File): Promise<GPXFile | null> {
         };
         reader.readAsText(file);
     });
+    const id = crypto.randomUUID();
+        fileNamesMap.update(map => {
+            return {
+                ...map,
+                [id]: {
+                    oldName: file.name,
+                    currentName: result?.metadata.name
+                }
+            };
+        });
+    console.debug(fileNamesMap, "added: ", file.name)
     return result;
 }
 

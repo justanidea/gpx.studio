@@ -9,12 +9,14 @@
         shift = false,
         ctrl = false,
         click = false,
+        alt = false,
         class: className = '',
     }: {
         key?: string;
         shift?: boolean;
         ctrl?: boolean;
         click?: boolean;
+        alt?: boolean;
         class?: string;
     } = $props();
 
@@ -33,6 +35,9 @@
     {/if}
     {#if ctrl}
         {mac && !safari ? '⌘' : i18n._('menu.ctrl')}
+    {/if}
+    {#if alt}
+        {'Alt'}
     {/if}
     {#if key}
         {key}

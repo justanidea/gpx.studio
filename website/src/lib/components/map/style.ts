@@ -205,7 +205,7 @@ export class StyleManager {
         map_: maplibregl.Map,
         traces
     ) {
-        console.log("updateTraceLayer called with traces:", traces);
+        // console.log("updateTraceLayer called with traces:", traces);
         const lengths = traces.map(t => t.distance);
 
         const min = Math.min(...lengths);
@@ -285,7 +285,7 @@ export class StyleManager {
             }
             return newMap;
         });
-        console.log(`filenames map updated:`, get(fileNamesMap));
+        // console.log(`filenames map updated:`, get(fileNamesMap));
 
     }
 

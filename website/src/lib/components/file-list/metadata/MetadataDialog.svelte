@@ -79,8 +79,8 @@
                 for (const fileNameState of Object.values(currentFileNamesMap)) {
                     if (fileNameState.currentName === oldName) {
                         fileNameState.currentName = newName;
-                        console.log(`current filenames map (updated):`, currentFileNamesMap);
-                        console.log("$fileNamesMap", $fileNamesMap)
+                        // console.log(`current filenames map (updated):`, currentFileNamesMap);
+                        // console.log("$fileNamesMap", $fileNamesMap)
                         return
                     }
                 }
